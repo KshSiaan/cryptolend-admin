@@ -18,8 +18,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Andark Admin",
-  description: "Admin dashboard for Andark course management platform.",
+  title: "CryptoLend",
+  description: "Admin dashboard for CryptoLend platform.",
 };
 
 export default function RootLayout({
