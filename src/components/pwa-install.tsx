@@ -1,10 +1,16 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 
+type BeforeInstallPromptEvent = Event & {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform?: string }>;
+};
+
 export default function PwaInstall() {
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [deferredPrompt, setDeferredPrompt] =
+    useState<BeforeInstallPromptEvent | null>(null);
   const [visible, setVisible] = useState(false);
   const [isIos, setIsIos] = useState(false);
 
@@ -13,7 +19,7 @@ export default function PwaInstall() {
       typeof navigator !== "undefined" ? navigator.userAgent.toLowerCase() : "";
     setIsIos(/iphone|ipad|ipod/.test(ua));
 
-    const onBeforeInstallPrompt = (e: Event) => {
+    const onBeforeInstallPrompt = (e: BeforeInstallPromptEvent) => {
       e.preventDefault?.();
       setDeferredPrompt(e);
       const dismissed = localStorage.getItem("pwa_install_dismissed");
@@ -29,16 +35,17 @@ export default function PwaInstall() {
 
     window.addEventListener(
       "beforeinstallprompt",
-      onBeforeInstallPrompt as any,
+      onBeforeInstallPrompt as EventListener,
     );
-    window.addEventListener("appinstalled", onAppInstalled as any);
+    window.addEventListener("appinstalled", onAppInstalled);
 
     // hide if already installed
     const isStandalone =
-      window.matchMedia &&
-      window.matchMedia("(display-mode: standalone)").matches;
+      window.matchMedia?.("(display-mode: standalone)")?.matches ?? false;
     // iOS has navigator.standalone
-    const iosStandalone = (window as any).navigator?.standalone;
+    const iosStandalone = Boolean(
+      (window.navigator as Navigator & { standalone?: boolean }).standalone,
+    );
     const dismissed = localStorage.getItem("pwa_install_dismissed");
 
     // If not installed and not dismissed, show banner on mobile sizes even
@@ -55,9 +62,9 @@ export default function PwaInstall() {
     return () => {
       window.removeEventListener(
         "beforeinstallprompt",
-        onBeforeInstallPrompt as any,
+        onBeforeInstallPrompt as EventListener,
       );
-      window.removeEventListener("appinstalled", onAppInstalled as any);
+      window.removeEventListener("appinstalled", onAppInstalled);
     };
   }, []);
 
@@ -72,8 +79,8 @@ export default function PwaInstall() {
 
     if (deferredPrompt) {
       try {
-        await (deferredPrompt as any).prompt();
-        const choice = await (deferredPrompt as any).userChoice;
+        await deferredPrompt.prompt();
+        const choice = await deferredPrompt.userChoice;
         if (choice && choice.outcome === "accepted") {
           setVisible(false);
           localStorage.removeItem("pwa_install_dismissed");

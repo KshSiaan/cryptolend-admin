@@ -1,10 +1,16 @@
 "use client";
 
 import { user } from "@/lib/mock-data";
-import { Bell, Lock, HelpCircle, ChevronRight, LogOut } from "lucide-react";
+import { Bell, Lock, HelpCircle, ChevronRight } from "lucide-react";
+import Image from "next/image";
 import { toast } from "sonner";
 import Link from "next/link";
 import React from "react";
+
+type BeforeInstallPromptEvent = Event & {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform?: string }>;
+};
 
 const menuItems = [
   { icon: Bell, label: "Notifications", href: "#" },
@@ -13,7 +19,8 @@ const menuItems = [
 ];
 
 export default function ProfilePage() {
-  const [deferredPrompt, setDeferredPrompt] = React.useState<any>(null);
+  const [deferredPrompt, setDeferredPrompt] =
+    React.useState<BeforeInstallPromptEvent | null>(null);
   const [isIos, setIsIos] = React.useState(false);
   const [isInstalled, setIsInstalled] = React.useState(false);
 
@@ -22,7 +29,7 @@ export default function ProfilePage() {
       typeof navigator !== "undefined" ? navigator.userAgent.toLowerCase() : "";
     setIsIos(/iphone|ipad|ipod/.test(ua));
 
-    const onBeforeInstallPrompt = (e: Event) => {
+    const onBeforeInstallPrompt = (e: BeforeInstallPromptEvent) => {
       e.preventDefault?.();
       setDeferredPrompt(e);
     };
@@ -33,22 +40,23 @@ export default function ProfilePage() {
 
     window.addEventListener(
       "beforeinstallprompt",
-      onBeforeInstallPrompt as any,
+      onBeforeInstallPrompt as EventListener,
     );
-    window.addEventListener("appinstalled", onAppInstalled as any);
+    window.addEventListener("appinstalled", onAppInstalled);
 
     const isStandalone =
-      window.matchMedia &&
-      window.matchMedia("(display-mode: standalone)").matches;
-    const iosStandalone = (window as any).navigator?.standalone;
+      window.matchMedia?.("(display-mode: standalone)")?.matches ?? false;
+    const iosStandalone = Boolean(
+      (window.navigator as Navigator & { standalone?: boolean }).standalone,
+    );
     if (isStandalone || iosStandalone) setIsInstalled(true);
 
     return () => {
       window.removeEventListener(
         "beforeinstallprompt",
-        onBeforeInstallPrompt as any,
+        onBeforeInstallPrompt as EventListener,
       );
-      window.removeEventListener("appinstalled", onAppInstalled as any);
+      window.removeEventListener("appinstalled", onAppInstalled);
     };
   }, []);
 
@@ -61,8 +69,8 @@ export default function ProfilePage() {
 
     if (deferredPrompt) {
       try {
-        await (deferredPrompt as any).prompt();
-        const choice = await (deferredPrompt as any).userChoice;
+        await deferredPrompt.prompt();
+        const choice = await deferredPrompt.userChoice;
         if (choice && choice.outcome === "accepted") {
           setIsInstalled(true);
         }
@@ -132,7 +140,12 @@ export default function ProfilePage() {
         <div className="rounded-2xl bg-card border border-border p-4 space-y-3">
           <div className="flex items-start gap-3">
             <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center">
-              <img src="/icon-192.png" alt="app" className="w-8 h-8" />
+              <Image
+                src="/icon-192.png"
+                alt="CryptoLend app icon"
+                width={32}
+                height={32}
+              />
             </div>
             <div className="flex-1">
               <div className="font-semibold">Install CryptoLend</div>
