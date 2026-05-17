@@ -17,7 +17,7 @@ export function UserNavbar() {
   const pathname = usePathname();
 
   return (
-    <nav className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur border-b border-border">
+    <nav className="sticky bottom-0 z-50 w-full bg-white backdrop-blur border-b border-border">
       <div className="max-w-lg mx-auto px-4">
         <div className="flex items-center justify-between h-14">
           {navItems.map(({ href, label, icon: Icon }) => {

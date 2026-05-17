@@ -56,7 +56,7 @@ export default function HomePage() {
             ≈ ${user.availableUsd.toLocaleString()} USD
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="grid grid-cols-2 gap-3">
           <DepositSheet>
             <button
               type="button"
@@ -77,7 +77,7 @@ export default function HomePage() {
           </WithdrawSheet>
           <Link
             href="/app/invest"
-            className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-background text-foreground hover:bg-background/90 transition-colors px-4 py-2.5 text-sm font-medium"
+            className="flex-1 col-span-2 flex items-center justify-center gap-2 rounded-xl bg-background text-foreground hover:bg-background/90 transition-colors px-4 py-2.5 text-sm font-medium"
           >
             <BarChart2 size={16} />
             Invest

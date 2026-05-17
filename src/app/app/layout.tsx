@@ -7,10 +7,10 @@ export default function UserLayout({
 }) {
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <UserNavbar />
       <main className="flex-1 w-full max-w-lg mx-auto px-4 pb-8">
         {children}
       </main>
+      <UserNavbar />
     </div>
   );
 }
