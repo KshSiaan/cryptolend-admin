@@ -4,6 +4,7 @@ import { user } from "@/lib/mock-data";
 import { Bell, Lock, HelpCircle, ChevronRight, LogOut } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
+import React from "react";
 
 const menuItems = [
   { icon: Bell, label: "Notifications", href: "#" },
@@ -12,6 +13,70 @@ const menuItems = [
 ];
 
 export default function ProfilePage() {
+  const [deferredPrompt, setDeferredPrompt] = React.useState<any>(null);
+  const [isIos, setIsIos] = React.useState(false);
+  const [isInstalled, setIsInstalled] = React.useState(false);
+
+  React.useEffect(() => {
+    const ua =
+      typeof navigator !== "undefined" ? navigator.userAgent.toLowerCase() : "";
+    setIsIos(/iphone|ipad|ipod/.test(ua));
+
+    const onBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault?.();
+      setDeferredPrompt(e);
+    };
+
+    const onAppInstalled = () => {
+      setIsInstalled(true);
+    };
+
+    window.addEventListener(
+      "beforeinstallprompt",
+      onBeforeInstallPrompt as any,
+    );
+    window.addEventListener("appinstalled", onAppInstalled as any);
+
+    const isStandalone =
+      window.matchMedia &&
+      window.matchMedia("(display-mode: standalone)").matches;
+    const iosStandalone = (window as any).navigator?.standalone;
+    if (isStandalone || iosStandalone) setIsInstalled(true);
+
+    return () => {
+      window.removeEventListener(
+        "beforeinstallprompt",
+        onBeforeInstallPrompt as any,
+      );
+      window.removeEventListener("appinstalled", onAppInstalled as any);
+    };
+  }, []);
+
+  const handleInstallFromProfile = async () => {
+    if (isIos) {
+      // Show the persistent instructions for iOS users
+      alert("To install: open the Share menu and choose 'Add to Home Screen'.");
+      return;
+    }
+
+    if (deferredPrompt) {
+      try {
+        await (deferredPrompt as any).prompt();
+        const choice = await (deferredPrompt as any).userChoice;
+        if (choice && choice.outcome === "accepted") {
+          setIsInstalled(true);
+        }
+      } catch (err) {
+        console.error("Install from profile failed", err);
+      }
+    } else {
+      // Fallback: instruct user to use browser menu
+      alert(
+        "Use your browser menu and choose 'Install app' or 'Add to Home screen'.",
+      );
+    }
+  };
+
   return (
     <div className="py-6 space-y-6">
       <h1 className="text-xl font-bold tracking-tight">Profile</h1>
@@ -61,6 +126,48 @@ export default function ProfilePage() {
           ))}
         </div>
       </div>
+
+      {/* Persistent PWA install section (shows when not installed) */}
+      {!isInstalled && (
+        <div className="rounded-2xl bg-card border border-border p-4 space-y-3">
+          <div className="flex items-start gap-3">
+            <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center">
+              <img src="/icon-192.png" alt="app" className="w-8 h-8" />
+            </div>
+            <div className="flex-1">
+              <div className="font-semibold">Install CryptoLend</div>
+              <p className="text-sm text-muted-foreground mt-1">
+                Install this app to your device for faster access and a
+                native-like experience. This message stays here until you
+                install the app.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleInstallFromProfile}
+              className="rounded-md bg-primary text-primary-foreground px-3 py-2 text-sm font-medium"
+            >
+              Install
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                // secondary help: show instructions
+                if (isIos) {
+                  alert("iOS: Share → Add to Home Screen");
+                } else {
+                  alert("Use browser menu → Install app / Add to Home screen");
+                }
+              }}
+              className="rounded-md border border-border px-3 py-2 text-sm"
+            >
+              How to install
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Menu items */}
       <div className="rounded-2xl bg-card border border-border divide-y divide-border">
