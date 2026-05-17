@@ -23,6 +23,7 @@ export default function ProfilePage() {
     React.useState<BeforeInstallPromptEvent | null>(null);
   const [isIos, setIsIos] = React.useState(false);
   const [isInstalled, setIsInstalled] = React.useState(false);
+  const [installHint, setInstallHint] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     const ua =
@@ -61,9 +62,12 @@ export default function ProfilePage() {
   }, []);
 
   const handleInstallFromProfile = async () => {
+    setInstallHint(null);
+
     if (isIos) {
-      // Show the persistent instructions for iOS users
-      alert("To install: open the Share menu and choose 'Add to Home Screen'.");
+      setInstallHint(
+        "On iPhone or iPad, open Share and choose Add to Home Screen.",
+      );
       return;
     }
 
@@ -73,14 +77,17 @@ export default function ProfilePage() {
         const choice = await deferredPrompt.userChoice;
         if (choice && choice.outcome === "accepted") {
           setIsInstalled(true);
+          setInstallHint("Installed successfully.");
+        } else {
+          setInstallHint("Install was dismissed.");
         }
       } catch (err) {
         console.error("Install from profile failed", err);
+        setInstallHint("The browser install prompt could not be opened.");
       }
     } else {
-      // Fallback: instruct user to use browser menu
-      alert(
-        "Use your browser menu and choose 'Install app' or 'Add to Home screen'.",
+      setInstallHint(
+        "Open the browser menu and choose Install app or Add to Home screen.",
       );
     }
   };
@@ -156,7 +163,7 @@ export default function ProfilePage() {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <button
               type="button"
               onClick={handleInstallFromProfile}
@@ -167,17 +174,21 @@ export default function ProfilePage() {
             <button
               type="button"
               onClick={() => {
-                // secondary help: show instructions
-                if (isIos) {
-                  alert("iOS: Share → Add to Home Screen");
-                } else {
-                  alert("Use browser menu → Install app / Add to Home screen");
-                }
+                setInstallHint(
+                  isIos
+                    ? "On iPhone or iPad, open Share and choose Add to Home Screen."
+                    : "Open the browser menu and choose Install app or Add to Home screen.",
+                );
               }}
               className="rounded-md border border-border px-3 py-2 text-sm"
             >
               How to install
             </button>
+            {installHint ? (
+              <p className="w-full text-xs text-muted-foreground">
+                {installHint}
+              </p>
+            ) : null}
           </div>
         </div>
       )}
