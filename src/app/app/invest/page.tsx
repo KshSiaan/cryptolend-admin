@@ -3,6 +3,7 @@
 import { loans, user } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 import { LoanDetailSheet } from "@/components/sheets/loan-detail-sheet";
+import { InvestSheet } from "@/components/sheets/invest-sheet";
 
 const statusStyles: Record<string, { badge: string; label: string }> = {
   active: { badge: "bg-green-pos/10 text-green-pos", label: "active" },
@@ -37,7 +38,7 @@ export default function InvestPage() {
 
       {/* Loan cards */}
       <div className="space-y-4">
-        {loans.map((loan) => {
+        {loans.filter((loan) => loan.status === "active").map((loan) => {
           const pct = Math.round((loan.raised / loan.target) * 100);
           const st = statusStyles[loan.status];
           const canInvest = loan.status === "active";
@@ -110,7 +111,7 @@ export default function InvestPage() {
                 </LoanDetailSheet>
 
                 {canInvest && (
-                  <LoanDetailSheet loan={loan}>
+                  <InvestSheet loan={loan}>
                     <button
                       type="button"
                       className="flex items-center gap-1.5 rounded-xl bg-foreground text-background px-4 py-2.5 text-sm font-medium"
@@ -127,7 +128,7 @@ export default function InvestPage() {
                       </svg>
                       Invest
                     </button>
-                  </LoanDetailSheet>
+                  </InvestSheet>
                 )}
               </div>
             </div>
