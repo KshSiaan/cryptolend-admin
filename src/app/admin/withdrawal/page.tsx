@@ -1,207 +1,168 @@
 "use client";
+
 import { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+
+import { Check, Eye, X } from "lucide-react";
+import { useCookies } from "react-cookie";
+import { toast } from "sonner";
+
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Eye, X, Check } from "lucide-react";
-import { cn } from "@/lib/utils";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import { useAdminWithdrawalRequests } from "@/hooks/use-admin-withdrawal-requests";
+import { howl } from "@/lib/utils";
+import type { AdminWithdrawalRequest } from "@/types/auth";
+import type { ApiResponse } from "@/types/base";
 
-type WithdrawalStatus = "pending" | "approved" | "rejected";
-
-interface Withdrawal {
-  id: number;
-  name: string;
-  email: string;
-  amount: string;
-  address: string;
-  date: string;
-  status: WithdrawalStatus;
-  note?: string;
-}
-
-const initialWithdrawals: Withdrawal[] = [
-  { id: 1, name: "Alex Kim", email: "alex@email.com", amount: "1.1700 USDT", address: "877klkjkl", date: "2026-05-09", status: "pending" },
-  { id: 2, name: "Alex Kim", email: "alex@email.com", amount: "1.1700 USDT", address: "877klkjkl", date: "2026-05-09", status: "pending" },
-  { id: 3, name: "Alex Kim", email: "alex@email.com", amount: "1.1700 USDT", address: "877klkjkl", date: "2026-05-09", status: "pending" },
-  { id: 4, name: "Alex Kim", email: "alex@email.com", amount: "1.1700 USDT", address: "877klkjkl", date: "2026-05-09", status: "approved", note: "Processed" },
-  { id: 5, name: "Alex Kim", email: "alex@email.com", amount: "1.1700 USDT", address: "877klkjkl", date: "2026-05-09", status: "rejected", note: '"Suspicious activity"' },
-];
-
-const statusStyles: Record<WithdrawalStatus, string> = {
-  pending: "bg-orange-100 text-orange-600 border-orange-200",
-  approved: "bg-green-100 text-green-700 border-green-200",
-  rejected: "bg-red-100 text-red-600 border-red-200",
+const statusBadge: Record<string, string> = {
+  pending: "bg-yellow-100 text-yellow-700",
+  approved: "bg-blue-100 text-blue-700",
+  processing: "bg-blue-100 text-blue-700",
+  rejected: "bg-red-100 text-red-600",
+  completed: "bg-green-100 text-green-700",
 };
 
-type ResultType = "approved" | "rejected" | null;
-
-function WithdrawalRow({
-  w,
-  onReview,
-}: {
-  w: Withdrawal;
-  onReview?: () => void;
-}) {
-  return (
-    <div className="flex items-start justify-between py-4 first:pt-0 last:pb-0 border-b last:border-0 border-border">
-      <div className="space-y-0.5">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold">{w.name}</span>
-          <span className="text-xs text-muted-foreground">
-            {w.email} · just now
-          </span>
-        </div>
-        <p className="text-sm font-medium">{w.amount}</p>
-        <p className="text-xs text-muted-foreground">{w.address}</p>
-        <p className="text-xs text-muted-foreground">{w.date}</p>
-        {w.note && (
-          <p className="text-xs text-muted-foreground">{w.note}</p>
-        )}
-      </div>
-      <div className="flex items-center gap-2 shrink-0 ml-4 mt-0.5">
-        <span
-          className={cn(
-            "text-xs font-medium px-2.5 py-0.5 rounded-full border capitalize",
-            statusStyles[w.status],
-          )}
-        >
-          {w.status}
-        </span>
-        {w.status === "pending" && onReview && (
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-7 text-xs gap-1.5"
-            onClick={onReview}
-          >
-            <Eye className="size-3.5" />
-            Review
-          </Button>
-        )}
-      </div>
-    </div>
-  );
+function formatDate(iso: string | null) {
+  if (!iso) return "—";
+  return new Date(iso).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
-export default function WithdrawalPage() {
-  const [withdrawals, setWithdrawals] = useState<Withdrawal[]>(initialWithdrawals);
-  const [reviewTarget, setReviewTarget] = useState<Withdrawal | null>(null);
-  const [adminNote, setAdminNote] = useState("");
-  const [result, setResult] = useState<ResultType>(null);
+function truncateAddr(addr: string) {
+  if (addr.length <= 20) return addr;
+  return `${addr.slice(0, 10)}…${addr.slice(-6)}`;
+}
 
-  const pending = withdrawals.filter((w) => w.status === "pending");
-  const processed = withdrawals.filter((w) => w.status !== "pending");
+function ReviewDialog({
+  req,
+  onClose,
+  onSuccess,
+}: {
+  req: AdminWithdrawalRequest;
+  onClose: () => void;
+  onSuccess: () => void;
+}) {
+  const [cookies] = useCookies(["auth_token"]);
+  const token = cookies.auth_token as string | undefined;
+  const [reason, setReason] = useState("");
+  const [pending, setPending] = useState(false);
 
-  const handleApprove = () => {
-    if (!reviewTarget) return;
-    setWithdrawals((prev) =>
-      prev.map((w) =>
-        w.id === reviewTarget.id
-          ? { ...w, status: "approved", note: adminNote || "Processed" }
-          : w,
-      ),
-    );
-    setResult("approved");
-  };
+  const canReview = req.status === "pending";
 
-  const handleReject = () => {
-    if (!reviewTarget) return;
-    setWithdrawals((prev) =>
-      prev.map((w) =>
-        w.id === reviewTarget.id
-          ? { ...w, status: "rejected", note: adminNote || undefined }
-          : w,
-      ),
-    );
-    setResult("rejected");
-  };
+  async function handleApprove() {
+    if (!token) return;
+    setPending(true);
+    try {
+      await howl<ApiResponse<unknown>>(
+        `/admin/withdrawal-requests/${req.id}/approve`,
+        { method: "POST", token },
+      );
+      toast.success("Withdrawal approved.");
+      onSuccess();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Approval failed.");
+    } finally {
+      setPending(false);
+    }
+  }
 
-  const closeReview = () => {
-    setReviewTarget(null);
-    setAdminNote("");
-    setResult(null);
-  };
-
-  const openReview = (w: Withdrawal) => {
-    setReviewTarget(w);
-    setAdminNote("");
-    setResult(null);
-  };
+  async function handleReject() {
+    if (!token) return;
+    if (!reason.trim()) {
+      toast.error("Reason required for rejection.");
+      return;
+    }
+    setPending(true);
+    try {
+      await howl<ApiResponse<unknown>>(
+        `/admin/withdrawal-requests/${req.id}/reject`,
+        { method: "POST", token, body: { reason: reason.trim() } },
+      );
+      toast.success("Withdrawal rejected.");
+      onSuccess();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Rejection failed.");
+    } finally {
+      setPending(false);
+    }
+  }
 
   return (
-    <div className="p-6 space-y-5">
-      {pending.length > 0 && (
-        <Card className="shadow-none">
-          <CardContent className="p-6">
-            <h2 className="text-base font-semibold mb-2">Pending Approval</h2>
-            <div>
-              {pending.map((w) => (
-                <WithdrawalRow key={w.id} w={w} onReview={() => openReview(w)} />
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+    <Dialog
+      open
+      onOpenChange={(o) => {
+        if (!o) onClose();
+      }}
+    >
+      <DialogContent className="sm:max-w-sm">
+        <DialogHeader>
+          <DialogTitle>
+            {canReview ? "Review Withdrawal" : "Withdrawal Details"} #{req.id}
+          </DialogTitle>
+        </DialogHeader>
 
-      {processed.length > 0 && (
-        <Card className="shadow-none">
-          <CardContent className="p-6">
-            <h2 className="text-base font-semibold mb-2">Processed</h2>
-            <div>
-              {processed.map((w) => (
-                <WithdrawalRow key={w.id} w={w} />
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Review Dialog */}
-      <Dialog open={!!reviewTarget && result === null} onOpenChange={(o) => !o && closeReview()}>
-        <DialogContent className="sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Review Withdrawal</DialogTitle>
-          </DialogHeader>
-          {reviewTarget && (
-            <div className="space-y-4">
-              <div className="space-y-3">
-                <div className="flex items-center justify-between border-b border-border pb-3">
-                  <span className="text-sm text-muted-foreground">Email</span>
-                  <span className="text-sm font-medium">{reviewTarget.email}</span>
-                </div>
-                <div className="flex items-center justify-between border-b border-border pb-3">
-                  <span className="text-sm text-muted-foreground">Amount</span>
-                  <span className="text-sm font-medium">{reviewTarget.amount}</span>
-                </div>
-                <div className="flex items-center justify-between border-b border-border pb-3">
-                  <span className="text-sm text-muted-foreground">To address</span>
-                  <span className="text-sm font-medium font-mono">{reviewTarget.address}</span>
-                </div>
-                <div className="flex items-center justify-between pb-1">
-                  <span className="text-sm text-muted-foreground">Submitted</span>
-                  <span className="text-sm font-medium">{reviewTarget.date}</span>
-                </div>
+        <div className="space-y-4 pt-1">
+          <div className="rounded-lg border border-border divide-y divide-border text-sm">
+            {[
+              { label: "User", value: `${req.user.name}` },
+              { label: "Email", value: req.user.email },
+              { label: "Amount", value: `${req.amount_sol} SOL` },
+              { label: "To", value: truncateAddr(req.recipient_address) },
+              { label: "Submitted", value: formatDate(req.created_at) },
+              { label: "Status", value: req.status },
+              ...(req.failure_reason
+                ? [{ label: "Reason", value: req.failure_reason }]
+                : []),
+            ].map((r) => (
+              <div key={r.label} className="flex justify-between px-3 py-2">
+                <span className="text-muted-foreground">{r.label}</span>
+                <span className="font-medium text-right max-w-[55%] break-all">
+                  {r.value}
+                </span>
               </div>
+            ))}
+          </div>
+
+          {canReview && (
+            <>
               <div className="space-y-1.5">
-                <span className="text-sm text-muted-foreground">Admin note (optional)</span>
-                <Textarea
-                  placeholder="e.g. Verified, processed via hot wallet..."
-                  value={adminNote}
-                  onChange={(e) => setAdminNote(e.target.value)}
-                  className="resize-none h-20 text-sm"
+                {/** biome-ignore lint/a11y/noLabelWithoutControl: intentional */}
+                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Rejection reason (required to reject)
+                </label>
+                <textarea
+                  rows={3}
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  placeholder="e.g. Suspicious address..."
+                  className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring resize-none"
                 />
               </div>
+
               <div className="flex gap-2">
                 <Button
                   variant="outline"
                   className="flex-1 gap-1.5 text-destructive hover:text-destructive border-destructive/30 hover:bg-destructive/5"
                   onClick={handleReject}
+                  disabled={pending}
                 >
                   <X className="size-3.5" />
                   Reject
@@ -209,50 +170,166 @@ export default function WithdrawalPage() {
                 <Button
                   className="flex-1 gap-1.5 bg-[oklch(0.52_0.165_145)] hover:bg-[oklch(0.47_0.165_145)] text-white"
                   onClick={handleApprove}
+                  disabled={pending}
                 >
                   <Check className="size-3.5" />
-                  Approve
+                  {pending ? "…" : "Approve"}
                 </Button>
               </div>
+            </>
+          )}
+
+          {!canReview && (
+            <Button variant="outline" className="w-full" onClick={onClose}>
+              Close
+            </Button>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+export default function WithdrawalPage() {
+  const [page, setPage] = useState(1);
+  const [reviewing, setReviewing] = useState<AdminWithdrawalRequest | null>(
+    null,
+  );
+
+  const { data, isLoading, refetch } = useAdminWithdrawalRequests(page);
+
+  const requests = data?.data?.data ?? [];
+  const lastPage = data?.data?.last_page ?? 1;
+  const total = data?.data?.total ?? 0;
+
+  return (
+    <div className="p-6 space-y-6">
+      <h1 className="text-2xl font-semibold tracking-tight">Withdrawals</h1>
+
+      <Card className="shadow-none">
+        <CardContent className="p-0">
+          {isLoading ? (
+            <div className="p-6 space-y-3">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-16 rounded bg-muted animate-pulse" />
+              ))}
+            </div>
+          ) : requests.length === 0 ? (
+            <div className="p-10 text-center text-sm text-muted-foreground">
+              No withdrawal requests.
+            </div>
+          ) : (
+            <div className="divide-y divide-border">
+              {requests.map((req) => (
+                <div
+                  key={req.id}
+                  className="flex items-center justify-between px-5 py-4 gap-4"
+                >
+                  <div className="min-w-0 flex-1 space-y-0.5">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-sm font-semibold">#{req.id}</span>
+                      <span className="text-sm font-medium">
+                        {req.user.name}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {req.user.email}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
+                      <span className="font-medium text-foreground">
+                        {req.amount_sol} SOL
+                      </span>
+                      <span className="font-mono">
+                        {truncateAddr(req.recipient_address)}
+                      </span>
+                      <span>{formatDate(req.created_at)}</span>
+                    </div>
+                    {req.failure_reason && (
+                      <p className="text-xs text-destructive">
+                        {req.failure_reason}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Badge
+                      className={`${statusBadge[req.status] ?? "bg-muted text-muted-foreground"} border-0 capitalize`}
+                    >
+                      {req.status}
+                    </Badge>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setReviewing(req)}
+                    >
+                      {req.status === "pending" ? (
+                        <>
+                          <Eye className="size-3.5 mr-1.5" />
+                          Review
+                        </>
+                      ) : (
+                        "View"
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
-        </DialogContent>
-      </Dialog>
+        </CardContent>
+      </Card>
 
-      {/* Result Dialog */}
-      <Dialog open={!!reviewTarget && result !== null} onOpenChange={(o) => !o && closeReview()}>
-        <DialogContent className="sm:max-w-sm">
-          <div className="flex flex-col items-center gap-4 py-4">
-            <div
-              className={cn(
-                "size-14 rounded-full flex items-center justify-center",
-                result === "approved"
-                  ? "bg-[oklch(0.52_0.165_145)]/10"
-                  : "bg-destructive/10",
-              )}
-            >
-              {result === "approved" ? (
-                <Check className="size-7 text-[oklch(0.52_0.165_145)]" />
-              ) : (
-                <X className="size-7 text-destructive" />
-              )}
-            </div>
-            <div className="text-center space-y-1.5">
-              <p className="text-base font-semibold">
-                {result === "approved" ? "Withdrawal approved" : "Withdrawal rejected"}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                {result === "approved"
-                  ? `${reviewTarget?.amount} has been approved for release to ${reviewTarget?.address.slice(0, 6)}...`
-                  : `The withdrawal of ${reviewTarget?.amount} was rejected. The balance has been restored to the user.`}
-              </p>
-            </div>
-            <Button variant="outline" className="w-full" onClick={closeReview}>
-              Done
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {!isLoading && total > 0 && (
+        <div className="flex items-center justify-between text-sm text-muted-foreground">
+          <span>
+            {total} request{total !== 1 ? "s" : ""}
+          </span>
+          {lastPage > 1 && (
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    aria-disabled={page === 1}
+                    className={
+                      page === 1
+                        ? "pointer-events-none opacity-50"
+                        : "cursor-pointer"
+                    }
+                  />
+                </PaginationItem>
+                <PaginationItem>
+                  <span className="px-3 py-2">
+                    {page} / {lastPage}
+                  </span>
+                </PaginationItem>
+                <PaginationItem>
+                  <PaginationNext
+                    onClick={() => setPage((p) => Math.min(lastPage, p + 1))}
+                    aria-disabled={page === lastPage}
+                    className={
+                      page === lastPage
+                        ? "pointer-events-none opacity-50"
+                        : "cursor-pointer"
+                    }
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          )}
+        </div>
+      )}
+
+      {reviewing && (
+        <ReviewDialog
+          req={reviewing}
+          onClose={() => setReviewing(null)}
+          onSuccess={() => {
+            setReviewing(null);
+            void refetch();
+          }}
+        />
+      )}
     </div>
   );
 }

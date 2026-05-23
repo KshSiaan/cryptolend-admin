@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { AlertTriangle, Copy, ExternalLink, QrCode, Zap } from "lucide-react";
+import { useEffect, useState } from "react";
+
+import { AlertTriangle, Copy, ExternalLink, Zap } from "lucide-react";
+import { useCookies } from "react-cookie";
 import { toast } from "sonner";
-import { platformWallet } from "@/lib/mock-data";
-import { cn } from "@/lib/utils";
+
 import {
   Sheet,
   SheetContent,
@@ -12,39 +13,106 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { howl } from "@/lib/utils";
+import type {
+  DepositBody,
+  DepositInstructions,
+  DepositResponseData,
+  MarketConvertData,
+} from "@/types/auth";
+import type { ApiResponse } from "@/types/base";
 
-type Method = "copy" | "qr";
 type Step = "select" | "processing" | "confirmed";
 
 export function DepositSheet({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
-  const [method, setMethod] = useState<Method>("copy");
   const [step, setStep] = useState<Step>("select");
-  const [amountSent, setAmountSent] = useState("");
+  const [txSignature, setTxSignature] = useState("");
   const [senderAddr, setSenderAddr] = useState("");
+  const [isPending, setIsPending] = useState(false);
+  const [instructions, setInstructions] = useState<DepositInstructions | null>(null);
+  const [eurAmount, setEurAmount] = useState("");
+  const [solEquiv, setSolEquiv] = useState<string | null>(null);
+  const [convertLoading, setConvertLoading] = useState(false);
+  const [depositResult, setDepositResult] = useState<DepositResponseData | null>(null);
+
+  const [cookies] = useCookies(["auth_token"]);
+  const token = cookies.auth_token as string | undefined;
+
+  useEffect(() => {
+    if (!open) return;
+    howl<ApiResponse<DepositInstructions>>("/wallet/deposits/instructions", { token })
+      .then((res) => setInstructions(res.data))
+      .catch(() => toast.error("Failed to load deposit instructions."));
+  }, [open, token]);
+
+  useEffect(() => {
+    if (!eurAmount || Number.isNaN(Number(eurAmount)) || Number(eurAmount) <= 0) {
+      setSolEquiv(null);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      setConvertLoading(true);
+      try {
+        const res = await howl<ApiResponse<MarketConvertData>>(
+          `/market/convert?from=eur&to=sol&amount=${eurAmount}`,
+          { token },
+        );
+        setSolEquiv(res.data.conversion.output_amount_sol);
+      } catch {
+        setSolEquiv(null);
+      } finally {
+        setConvertLoading(false);
+      }
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [eurAmount, token]);
 
   function handleCopy() {
-    navigator.clipboard.writeText(platformWallet);
+    if (!instructions?.deposit_address) return;
+    navigator.clipboard.writeText(instructions.deposit_address);
     toast.success("Address copied");
   }
 
-  function handleSubmit() {
-    if (!amountSent || !senderAddr) {
-      toast.error("Fill in amount and sender address");
+  async function handleSubmit() {
+    if (!txSignature || !senderAddr) {
+      toast.error("Fill in transaction signature and sender address.");
       return;
     }
+    if (!token) return;
+
+    setIsPending(true);
     setStep("processing");
-    setTimeout(() => setStep("confirmed"), 2000);
+    try {
+      const body: DepositBody = { tx_signature: txSignature, from_address: senderAddr };
+      const res = await howl<ApiResponse<DepositResponseData>>("/wallet/deposits", {
+        method: "POST",
+        body,
+        token,
+      });
+      setDepositResult(res.data);
+      setStep("confirmed");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Deposit failed.");
+      setStep("select");
+    } finally {
+      setIsPending(false);
+    }
   }
 
   function handleClose() {
     setOpen(false);
     setTimeout(() => {
       setStep("select");
-      setAmountSent("");
+      setTxSignature("");
       setSenderAddr("");
+      setEurAmount("");
+      setSolEquiv(null);
+      setDepositResult(null);
     }, 300);
   }
+
+  const depositAddress = instructions?.deposit_address ?? "";
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -57,160 +125,133 @@ export function DepositSheet({ children }: { children: React.ReactNode }) {
           <>
             <SheetHeader className="pb-2">
               <SheetTitle className="text-xl font-bold text-left">
-                Deposit USDT
+                Deposit SOL
               </SheetTitle>
             </SheetHeader>
 
-            <div className="rounded-xl bg-purple-bg border border-purple/20 p-3 flex gap-2 mb-5">
-              <Zap size={16} className="text-purple shrink-0 mt-0.5" />
-              <p className="text-sm text-purple">
-                <span className="font-bold">Solana is fast &amp; cheap.</span>{" "}
-                Deposits confirm in ~1–2 seconds. Transaction fee is less than
-                $0.001.
-              </p>
-            </div>
-
-            <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-3">
-              Step 1 — Choose Method
-            </p>
-            <div className="grid grid-cols-2 gap-3 mb-6">
-              {(["copy", "qr"] as Method[]).map((m) => (
-                <button
-                  key={m}
-                  type="button"
-                  onClick={() => setMethod(m)}
-                  className={cn(
-                    "flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-colors",
-                    method === m
-                      ? "border-purple bg-purple-bg"
-                      : "border-border bg-card hover:border-purple/40",
-                  )}
-                >
-                  {m === "copy" ? (
-                    <Copy size={24} className="text-muted-foreground" />
-                  ) : (
-                    <QrCode size={24} className="text-muted-foreground" />
-                  )}
-                  <span className="text-sm font-medium">
-                    {m === "copy" ? "Copy address" : "Scan QR code"}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    {m === "copy" ? "Paste in wallet app" : "Use wallet camera"}
-                  </span>
-                </button>
-              ))}
-            </div>
-
-            <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-3">
-              Step 2 — Send SOL to this address
-            </p>
-            <div className="rounded-2xl bg-card border border-border p-4 mb-4 space-y-3">
-              <p className="text-xs text-muted-foreground">
-                Platform wallet (Solana)
-              </p>
-              <p className="text-xs font-mono break-all text-foreground bg-muted rounded-lg px-3 py-2">
-                {platformWallet}
-              </p>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={handleCopy}
-                  className="flex items-center justify-center gap-2 bg-foreground text-background rounded-xl py-2.5 text-sm font-medium"
-                >
-                  <Copy size={14} />
-                  Copy Address
-                </button>
-                <button
-                  type="button"
-                  className="flex items-center justify-center gap-2 bg-foreground text-background rounded-xl py-2.5 text-sm font-medium"
-                >
-                  <QrCode size={14} />
-                  Show QR
-                </button>
-              </div>
-
-              {method === "qr" && (
-                <div className="rounded-xl bg-muted h-32 flex items-center justify-center mt-1">
-                  <div className="text-center text-muted-foreground">
-                    <QrCode size={40} className="mx-auto mb-1 opacity-40" />
-                    <p className="text-xs">Tap to simulate wallet scan</p>
-                  </div>
-                </div>
-              )}
-
-              <div className="rounded-xl border border-orange-border bg-orange-bg p-3 flex gap-2">
-                <AlertTriangle
-                  size={14}
-                  className="text-orange shrink-0 mt-0.5"
-                />
-                <p className="text-xs text-orange">
-                  Only send SOL on the{" "}
-                  <span className="font-bold">Solana mainnet.</span> Do not send
-                  ETH, USDT or tokens from other networks.
+            {instructions?.messages?.[0] && (
+              <div className="rounded-xl bg-purple-bg border border-purple/20 p-3 flex gap-2 mb-5">
+                <Zap size={16} className="text-purple shrink-0 mt-0.5" />
+                <p className="text-sm text-purple">
+                  <span className="font-bold">Solana is fast &amp; cheap.</span>{" "}
+                  {instructions.messages[0]}
                 </p>
               </div>
-            </div>
+            )}
 
-            <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-3">
-              Step 3 — Open your Solana wallet app
-            </p>
-            <div className="rounded-2xl bg-card border border-border divide-y divide-border mb-6">
-              {[
-                { name: "Phantom", desc: "Most popular Solana wallet" },
-                { name: "Solflare", desc: "Web & mobile Solana wallet" },
-                { name: "Backpack", desc: "Next-gen Solana wallet" },
-              ].map((w) => (
-                <div
-                  key={w.name}
-                  className="flex items-center justify-between px-4 py-3"
-                >
-                  <div>
-                    <p className="text-sm font-semibold">{w.name}</p>
-                    <p className="text-xs text-muted-foreground">{w.desc}</p>
-                  </div>
-                  <ExternalLink size={14} className="text-muted-foreground" />
-                </div>
-              ))}
-            </div>
-
-            <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-3">
-              Step 4 — Confirm your deposit
-            </p>
-            <div className="space-y-3 mb-6">
+            {/* EUR → SOL converter */}
+            <div className="rounded-2xl bg-card border border-border p-4 mb-5 space-y-3">
+              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                EUR → SOL Estimator
+              </p>
               <div className="space-y-1.5">
-                <label
-                  htmlFor="deposit-amount"
-                  className="text-sm text-muted-foreground"
-                >
-                  Amount sent (SOL)
+                <label htmlFor="eur-amount" className="text-sm text-muted-foreground">
+                  Amount in EUR
                 </label>
                 <input
-                  id="deposit-amount"
+                  id="eur-amount"
                   type="number"
-                  placeholder="0.0"
-                  value={amountSent}
-                  onChange={(e) => setAmountSent(e.target.value)}
+                  placeholder="100"
+                  value={eurAmount}
+                  onChange={(e) => setEurAmount(e.target.value)}
                   className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-ring"
                 />
               </div>
+              {convertLoading && (
+                <p className="text-xs text-muted-foreground">Converting…</p>
+              )}
+              {solEquiv && !convertLoading && (
+                <p className="text-sm font-semibold text-green-pos">
+                  ≈ {solEquiv} SOL
+                </p>
+              )}
+            </div>
+
+            <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-3">
+              Step 1 — Send SOL to this address
+            </p>
+            <div className="rounded-2xl bg-card border border-border p-4 mb-4 space-y-3">
+              <p className="text-xs text-muted-foreground">Platform wallet (Solana)</p>
+              <p className="text-xs font-mono break-all text-foreground bg-muted rounded-lg px-3 py-2">
+                {depositAddress || "Loading…"}
+              </p>
+              <button
+                type="button"
+                onClick={handleCopy}
+                disabled={!depositAddress}
+                className="w-full flex items-center justify-center gap-2 bg-foreground text-background rounded-xl py-2.5 text-sm font-medium disabled:opacity-50"
+              >
+                <Copy size={14} />
+                Copy Address
+              </button>
+
+              {instructions?.warnings?.map((w) => (
+                <div key={w} className="rounded-xl border border-orange-border bg-orange-bg p-3 flex gap-2">
+                  <AlertTriangle size={14} className="text-orange shrink-0 mt-0.5" />
+                  <p className="text-xs text-orange">{w}</p>
+                </div>
+              ))}
+            </div>
+
+            {instructions?.wallet_links && instructions.wallet_links.length > 0 && (
+              <>
+                <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-3">
+                  Step 2 — Open your Solana wallet app
+                </p>
+                <div className="rounded-2xl bg-card border border-border divide-y divide-border mb-6">
+                  {instructions.wallet_links.map((w) => {
+                    const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
+                    const isIos = /iPhone|iPad|iPod/i.test(ua);
+                    const isAndroid = /Android/i.test(ua);
+                    const href = isIos ? w.ios_url : isAndroid ? w.android_url : w.fallback_url;
+                    return (
+                      <a
+                        key={w.name}
+                        href={href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-between px-4 py-3"
+                      >
+                        <p className="text-sm font-semibold">{w.name}</p>
+                        <ExternalLink size={14} className="text-muted-foreground" />
+                      </a>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+
+            <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-3">
+              Step 3 — Confirm your deposit
+            </p>
+            <div className="space-y-3 mb-6">
               <div className="space-y-1.5">
-                <label
-                  htmlFor="deposit-sender"
-                  className="text-sm text-muted-foreground"
-                >
+                <label htmlFor="deposit-tx" className="text-sm text-muted-foreground">
+                  Transaction signature
+                </label>
+                <input
+                  id="deposit-tx"
+                  type="text"
+                  placeholder="Paste Solana tx signature"
+                  value={txSignature}
+                  onChange={(e) => setTxSignature(e.target.value)}
+                  className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-ring font-mono"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label htmlFor="deposit-sender" className="text-sm text-muted-foreground">
                   Your Solana wallet address (sender)
                 </label>
                 <input
                   id="deposit-sender"
                   type="text"
-                  placeholder="7XkZ.. (address you sent from)"
+                  placeholder="7XkZ… (address you sent from)"
                   value={senderAddr}
                   onChange={(e) => setSenderAddr(e.target.value)}
-                  className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-ring"
+                  className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-ring font-mono"
                 />
                 <p className="text-[11px] text-muted-foreground">
-                  We match this address to your account on the blockchain. Only
-                  needs to be registered once.
+                  We match this address to your account on the blockchain.
                 </p>
               </div>
             </div>
@@ -218,7 +259,8 @@ export function DepositSheet({ children }: { children: React.ReactNode }) {
             <button
               type="button"
               onClick={handleSubmit}
-              className="w-full bg-foreground text-background rounded-2xl py-3.5 font-semibold text-sm"
+              disabled={isPending}
+              className="w-full bg-foreground text-background rounded-2xl py-3.5 font-semibold text-sm disabled:opacity-50"
             >
               Submit Deposit
             </button>
@@ -232,37 +274,11 @@ export function DepositSheet({ children }: { children: React.ReactNode }) {
             </div>
             <h2 className="text-xl font-bold">Processing Deposit</h2>
             <p className="text-muted-foreground text-sm max-w-xs">
-              Your SOL is being verified on the Solana blockchain.
+              Verifying your transaction on the Solana blockchain.
             </p>
             <p className="text-green-pos font-semibold text-sm">
               Usually takes 1–2 seconds.
             </p>
-            <div className="w-full rounded-2xl bg-card border border-border divide-y divide-border mt-4">
-              {[
-                { label: "Amount", value: `${amountSent} SOL` },
-                { label: "Network", value: "Solana" },
-                { label: "Confirmations", value: "Waiting..." },
-                { label: "Est. time", value: "≈1–2 seconds" },
-                { label: "Fee paid", value: "≈$0.00025" },
-              ].map((r) => (
-                <div
-                  key={r.label}
-                  className="flex justify-between px-4 py-3 text-sm"
-                >
-                  <span className="text-muted-foreground">{r.label}</span>
-                  <span
-                    className={cn(
-                      "font-medium",
-                      r.label === "Est. time" || r.label === "Fee paid"
-                        ? "text-green-pos"
-                        : "",
-                    )}
-                  >
-                    {r.value}
-                  </span>
-                </div>
-              ))}
-            </div>
           </div>
         )}
 
@@ -281,64 +297,37 @@ export function DepositSheet({ children }: { children: React.ReactNode }) {
                 <polyline points="20 6 9 17 4 12" />
               </svg>
             </div>
-            <h2 className="text-xl font-bold">Deposit Confirmed!</h2>
+            <h2 className="text-xl font-bold">Deposit Submitted!</h2>
             <p className="text-muted-foreground text-sm">
-              Verified on Solana in{" "}
-              <span className="font-bold">1 confirmation.</span> Balance updated
-              instantly.
+              Your deposit is pending blockchain confirmation.
             </p>
 
-            <div className="w-full rounded-2xl bg-card border border-border divide-y divide-border">
-              {[
-                { label: "Amount credited", value: `+${amountSent} SOL`, green: true },
-                {
-                  label: "New balance",
-                  value: `${(1.842 + parseFloat(amountSent || "0")).toFixed(4)} SOL`,
-                  green: false,
-                },
-                { label: "Confirmations", value: "1 / 1 ✓", green: false },
-                { label: "Network", value: "Solana mainnet", green: false },
-                { label: "View on explorer", value: "Solscan ✓", green: true },
-              ].map((r) => (
-                <div
-                  key={r.label}
-                  className="flex justify-between items-center px-4 py-3 text-sm"
-                >
-                  <span className="text-muted-foreground">{r.label}</span>
-                  <span className={cn("font-medium", r.green ? "text-green-pos" : "")}>
-                    {r.value}
-                  </span>
-                </div>
-              ))}
-            </div>
+            {depositResult && (
+              <div className="w-full rounded-2xl bg-card border border-border divide-y divide-border">
+                {[
+                  { label: "Status", value: depositResult.deposit.status },
+                  { label: "Amount", value: `${depositResult.deposit.amount_sol} SOL` },
+                  { label: "Network", value: "Solana" },
+                  {
+                    label: "Tx Signature",
+                    value: `${depositResult.deposit.tx_signature.slice(0, 12)}…`,
+                  },
+                ].map((r) => (
+                  <div key={r.label} className="flex justify-between px-4 py-3 text-sm">
+                    <span className="text-muted-foreground">{r.label}</span>
+                    <span className="font-medium capitalize">{r.value}</span>
+                  </div>
+                ))}
+              </div>
+            )}
 
-            <div className="w-full rounded-2xl bg-foreground text-background p-4 mt-2">
-              <p className="text-[10px] uppercase tracking-widest opacity-60">
-                New Balance
-              </p>
-              <p className="text-3xl font-bold mt-1">
-                {(1.842 + parseFloat(amountSent || "0")).toFixed(4)}{" "}
-                <span className="text-base font-semibold">SOL</span>
-              </p>
-              <p className="text-sm opacity-60">≈ $2,582.76 USD</p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 w-full mt-2">
-              <button
-                type="button"
-                onClick={handleClose}
-                className="bg-foreground text-background rounded-2xl py-3.5 font-semibold text-sm"
-              >
-                Back to wallet
-              </button>
-              <button
-                type="button"
-                onClick={handleClose}
-                className="bg-foreground text-background rounded-2xl py-3.5 font-semibold text-sm"
-              >
-                Invest Now
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={handleClose}
+              className="w-full bg-foreground text-background rounded-2xl py-3.5 font-semibold text-sm"
+            >
+              Back to wallet
+            </button>
           </div>
         )}
       </SheetContent>

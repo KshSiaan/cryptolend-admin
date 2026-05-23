@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
+import { useCookies } from "react-cookie";
 import { toast } from "sonner";
-import type { loans } from "@/lib/mock-data";
-import { user } from "@/lib/mock-data";
+
 import {
   Sheet,
   SheetContent,
@@ -11,18 +12,19 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { useProfile } from "@/hooks/use-profile";
+import { howl } from "@/lib/utils";
+import type { InvestResponseData, LoanItem, MarketConvertData } from "@/types/auth";
+import type { ApiResponse } from "@/types/base";
 
-type Loan = (typeof loans)[number];
 type Step = "invest" | "confirmed";
 type Currency = "SOL" | "EUR";
-
-const SOL_TO_EUR = 130;
 
 export function InvestSheet({
   loan,
   children,
 }: {
-  loan: Loan;
+  loan: LoanItem;
   children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
@@ -30,41 +32,72 @@ export function InvestSheet({
   const [currency, setCurrency] = useState<Currency>("SOL");
   const [solAmount, setSolAmount] = useState("");
   const [eurAmount, setEurAmount] = useState("");
+  const [eurToSol, setEurToSol] = useState<string | null>(null);
+  const [convertLoading, setConvertLoading] = useState(false);
+  const [isPending, setIsPending] = useState(false);
+  const [result, setResult] = useState<InvestResponseData | null>(null);
+
+  const [cookies] = useCookies(["auth_token"]);
+  const token = cookies.auth_token as string | undefined;
+  const { data: profileData } = useProfile();
+  const balanceSol = profileData?.data?.wallet_balance_sol ?? "0";
 
   const solVal = parseFloat(solAmount) || 0;
+  const aprDecimal = loan.apr_percent / 100;
   const monthlyPayment = solVal > 0
-    ? (solVal * (loan.apr / 100)) / 12 + solVal / loan.durationMonths
+    ? (solVal * aprDecimal) / 12 + solVal / loan.duration_months
     : 0;
   const totalInterest = solVal > 0
-    ? ((solVal * loan.apr) / 100 / 12) * loan.durationMonths
+    ? (solVal * aprDecimal / 12) * loan.duration_months
     : 0;
   const totalReturn = solVal + totalInterest;
 
-  const pct = Math.round((loan.raised / loan.target) * 100);
+  // EUR → SOL conversion (debounced, only when EUR mode)
+  useEffect(() => {
+    if (currency !== "EUR" || !eurAmount || Number(eurAmount) <= 0) return;
+    const timer = setTimeout(async () => {
+      setConvertLoading(true);
+      try {
+        const res = await howl<ApiResponse<MarketConvertData>>(
+          `/market/convert?from=eur&to=sol&amount=${eurAmount}`,
+          { token },
+        );
+        const sol = res.data.conversion.output_amount_sol;
+        setEurToSol(sol);
+        setSolAmount(sol);
+      } catch {
+        setEurToSol(null);
+      } finally {
+        setConvertLoading(false);
+      }
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [eurAmount, currency, token]);
 
-  function handleSolChange(v: string) {
-    setSolAmount(v);
-    const n = parseFloat(v);
-    setEurAmount(n > 0 ? (n * SOL_TO_EUR).toFixed(2) : "");
-  }
-
-  function handleEurChange(v: string) {
-    setEurAmount(v);
-    const n = parseFloat(v);
-    setSolAmount(n > 0 ? (n / SOL_TO_EUR).toFixed(6) : "");
-  }
-
-  function handleConfirm() {
+  async function handleConfirm() {
     const v = parseFloat(solAmount);
-    if (!v || v <= 0) {
-      toast.error("Enter a valid amount");
-      return;
+    if (!v || v <= 0) { toast.error("Enter a valid amount."); return; }
+    if (v > parseFloat(balanceSol)) { toast.error("Insufficient balance."); return; }
+    if (!token) return;
+
+    setIsPending(true);
+    try {
+      const body = currency === "EUR"
+        ? { amount_eur: parseFloat(eurAmount) }
+        : { amount_sol: solAmount };
+
+      const res = await howl<ApiResponse<InvestResponseData>>(`/loans/${loan.id}/invest`, {
+        method: "POST",
+        body,
+        token,
+      });
+      setResult(res.data);
+      setStep("confirmed");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Investment failed.");
+    } finally {
+      setIsPending(false);
     }
-    if (v > user.availableBalance) {
-      toast.error("Insufficient balance");
-      return;
-    }
-    setStep("confirmed");
   }
 
   function handleClose() {
@@ -73,7 +106,9 @@ export function InvestSheet({
       setStep("invest");
       setSolAmount("");
       setEurAmount("");
+      setEurToSol(null);
       setCurrency("SOL");
+      setResult(null);
     }, 300);
   }
 
@@ -85,20 +120,18 @@ export function InvestSheet({
         className="rounded-t-3xl max-h-[92dvh] overflow-y-auto px-5 pb-8 pt-6"
       >
         <SheetHeader className="hidden">
-          <SheetTitle></SheetTitle>
+          <SheetTitle>{loan.title}</SheetTitle>
         </SheetHeader>
+
         {step === "invest" && (
           <div className="space-y-5">
-            {/* Tags + close row */}
+            {/* Tags */}
             <div className="flex items-center gap-2 flex-wrap">
               <span className="rounded-full border border-border bg-muted/60 px-2.5 py-0.5 text-xs font-medium">
                 {loan.sector}
               </span>
-              <span className="rounded-full border border-border bg-muted/60 px-2.5 py-0.5 text-xs font-medium">
-                {loan.grade}
-              </span>
-              <span className="rounded-full border border-border bg-muted/60 px-2.5 py-0.5 text-xs font-medium font-mono">
-                LN-{String(loan.id).padStart(4, "0")}
+              <span className="rounded-full border border-border bg-muted/60 px-2.5 py-0.5 text-xs font-mono font-medium">
+                {loan.loan_number}
               </span>
             </div>
 
@@ -109,12 +142,11 @@ export function InvestSheet({
             </div>
 
             {/* Stats row */}
-            <div className="rounded-xl bg-muted/50 border border-border grid grid-cols-4 divide-x divide-border px-0 py-3">
+            <div className="rounded-xl bg-muted/50 border border-border grid grid-cols-3 divide-x divide-border px-0 py-3">
               {[
-                { label: "PRINCIPAL", value: `${loan.target}` },
-                { label: "APR", value: `${loan.apr}%` },
-                { label: "TERM", value: `${loan.durationMonths}mo` },
-                { label: "MIN.", value: `${loan.minInvestment}` },
+                { label: "APR", value: `${loan.apr_percent}%` },
+                { label: "TERM", value: `${loan.duration_months}mo` },
+                { label: "TARGET", value: `${loan.target_amount_sol} SOL` },
               ].map((s) => (
                 <div key={s.label} className="flex flex-col items-center gap-0.5 px-2">
                   <span className="text-[9px] uppercase tracking-widest text-muted-foreground">
@@ -129,28 +161,28 @@ export function InvestSheet({
             <div className="space-y-1.5">
               <div className="flex items-center justify-between text-[10px] uppercase tracking-widest text-muted-foreground">
                 <span>Funding</span>
-                <span>{pct}%</span>
+                <span>{loan.funded_percent_label}</span>
               </div>
               <div className="h-2 rounded-full bg-muted overflow-hidden">
                 <div
                   className="h-full bg-foreground rounded-full"
-                  style={{ width: `${Math.min(pct, 100)}%` }}
+                  style={{ width: `${Math.min(loan.funded_percent, 100)}%` }}
                 />
               </div>
               <p className="text-xs text-muted-foreground">
-                {loan.raised} of {loan.target} SOL · closes {loan.nextPayment ?? "TBD"}
+                {loan.raised_amount_sol} of {loan.target_amount_sol} SOL raised
               </p>
             </div>
 
             {/* Amount input */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <label htmlFor="invest-sol" className="text-xs font-semibold uppercase tracking-wider">
-                  Your investment amount ({currency})
+                <label htmlFor="invest-amount" className="text-xs font-semibold uppercase tracking-wider">
+                  Investment amount ({currency})
                 </label>
                 <button
                   type="button"
-                  onClick={() => setCurrency((c) => (c === "SOL" ? "EUR" : "SOL"))}
+                  onClick={() => { setCurrency((c) => c === "SOL" ? "EUR" : "SOL"); setEurToSol(null); }}
                   className="flex items-center gap-1.5 rounded-full border border-border bg-card px-2.5 py-1 text-[11px] font-medium"
                 >
                   <span className={currency === "SOL" ? "font-bold" : "text-muted-foreground"}>SOL</span>
@@ -160,24 +192,34 @@ export function InvestSheet({
               </div>
 
               <input
-                id="invest-sol"
+                id="invest-amount"
                 type="number"
                 min="0"
                 step="0.01"
                 placeholder={currency === "SOL" ? "0.00 SOL" : "0.00 EUR"}
                 value={currency === "SOL" ? solAmount : eurAmount}
-                onChange={(e) =>
-                  currency === "SOL"
-                    ? handleSolChange(e.target.value)
-                    : handleEurChange(e.target.value)
-                }
+                onChange={(e) => {
+                  if (currency === "SOL") {
+                    setSolAmount(e.target.value);
+                    setEurToSol(null);
+                  } else {
+                    setEurAmount(e.target.value);
+                  }
+                }}
                 className="w-full rounded-xl border border-border bg-card px-4 py-3 text-base outline-none focus:ring-2 focus:ring-ring"
               />
 
+              {currency === "EUR" && convertLoading && (
+                <p className="text-xs text-muted-foreground">Converting…</p>
+              )}
+              {currency === "EUR" && eurToSol && !convertLoading && (
+                <p className="text-xs text-muted-foreground">
+                  ≈ <span className="font-semibold text-foreground">{eurToSol} SOL</span>
+                </p>
+              )}
+
               <p className="text-xs text-muted-foreground">
-                Available: <span className="font-semibold text-foreground">{user.availableBalance.toFixed(4)} SOL</span>
-                <span className="ml-1">≈ €{(user.availableBalance * SOL_TO_EUR).toFixed(2)}</span>
-                <span className="ml-2 text-[10px]">· Rate: 1 SOL = €{SOL_TO_EUR} (mock)</span>
+                Available: <span className="font-semibold text-foreground">{balanceSol} SOL</span>
               </p>
             </div>
 
@@ -187,11 +229,11 @@ export function InvestSheet({
                 {[
                   { label: "Monthly payment", value: `${monthlyPayment.toFixed(4)} SOL`, green: false },
                   { label: "Total interest earned", value: `+${totalInterest.toFixed(4)} SOL`, green: true },
-                  { label: `Total return after ${loan.durationMonths}mo`, value: `${totalReturn.toFixed(4)} SOL`, green: false, bold: true },
+                  { label: `Total return after ${loan.duration_months}mo`, value: `${totalReturn.toFixed(4)} SOL`, green: false },
                 ].map((r) => (
                   <div key={r.label} className="flex items-center justify-between px-4 py-2.5 text-sm">
                     <span className="text-muted-foreground">{r.label}</span>
-                    <span className={`font-semibold ${r.green ? "text-green-pos" : ""} ${r.bold ? "font-bold" : ""}`}>
+                    <span className={`font-semibold ${r.green ? "text-green-pos" : ""}`}>
                       {r.value}
                     </span>
                   </div>
@@ -211,19 +253,16 @@ export function InvestSheet({
               <button
                 type="button"
                 onClick={handleConfirm}
-                className="rounded-2xl bg-foreground text-background py-3.5 font-semibold text-sm"
+                disabled={isPending}
+                className="rounded-2xl bg-foreground text-background py-3.5 font-semibold text-sm disabled:opacity-50"
               >
-                Submit application
+                {isPending ? "Submitting…" : "Submit investment"}
               </button>
             </div>
-
-            <p className="text-center text-[10px] text-muted-foreground">
-              Applications are reviewed within 48 hours. Funds held in escrow upon submission.
-            </p>
           </div>
         )}
 
-        {step === "confirmed" && (
+        {step === "confirmed" && result && (
           <div className="py-8 flex flex-col items-center text-center space-y-4">
             <div className="w-20 h-20 rounded-full bg-green-pos/10 flex items-center justify-center">
               <svg
@@ -240,24 +279,20 @@ export function InvestSheet({
             <h2 className="text-xl font-bold">Investment confirmed!</h2>
             <p className="text-muted-foreground text-sm max-w-xs">
               Invested{" "}
-              <span className="font-bold text-foreground">{solAmount} SOL</span>
-              {eurAmount && (
-                <span className="text-muted-foreground"> (≈ €{eurAmount})</span>
-              )}{" "}
+              <span className="font-bold text-foreground">{result.investment.amount_sol} SOL</span>{" "}
               in {loan.title}.
             </p>
             <div className="w-full rounded-2xl bg-card border border-border divide-y divide-border">
               {[
-                { label: "Amount", value: `${solAmount} SOL`, green: false },
-                { label: "EUR equiv.", value: `€${eurAmount || (parseFloat(solAmount) * SOL_TO_EUR).toFixed(2)}`, green: false },
-                { label: "Monthly payment", value: `${monthlyPayment.toFixed(4)} SOL`, green: false },
-                { label: "Total interest", value: `+${totalInterest.toFixed(4)} SOL`, green: true },
-                { label: "Total return", value: `${totalReturn.toFixed(4)} SOL`, green: false },
-                { label: "APR", value: `${loan.apr}%`, green: true },
+                { label: "Amount", value: `${result.investment.amount_sol} SOL`, green: false },
+                { label: "Expected return", value: `${result.investment.expected_return_sol} SOL`, green: true },
+                { label: "APR", value: `${result.investment.apr_percent}%`, green: true },
+                { label: "New balance", value: `${result.wallet.balance_sol} SOL`, green: false },
+                { label: "Status", value: result.investment.status, green: false },
               ].map((r) => (
                 <div key={r.label} className="flex justify-between items-center px-4 py-3 text-sm">
                   <span className="text-muted-foreground">{r.label}</span>
-                  <span className={r.green ? "font-semibold text-green-pos" : "font-semibold"}>
+                  <span className={`font-semibold capitalize ${r.green ? "text-green-pos" : ""}`}>
                     {r.value}
                   </span>
                 </div>

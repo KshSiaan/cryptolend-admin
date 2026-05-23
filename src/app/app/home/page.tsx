@@ -1,11 +1,14 @@
 "use client";
 
-import Link from "next/link";
 import { ArrowDownLeft, ArrowUpRight, BarChart2 } from "lucide-react";
-import { user, loans, transactions } from "@/lib/mock-data";
-import { cn } from "@/lib/utils";
+import Link from "next/link";
+
 import { DepositSheet } from "@/components/sheets/deposit-sheet";
 import { WithdrawSheet } from "@/components/sheets/withdraw-sheet";
+import { useHomeStats } from "@/hooks/use-home-stats";
+import { useProfile } from "@/hooks/use-profile";
+import { cn } from "@/lib/utils";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 function getGreeting() {
   const h = new Date().getHours();
@@ -14,8 +17,32 @@ function getGreeting() {
   return "Good evening";
 }
 
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
 export default function HomePage() {
-  const firstName = user.name.split(" ")[0];
+  const { data: profileData } = useProfile();
+  const { data: statsData } = useHomeStats();
+
+  const profile = profileData?.data;
+  const stats = statsData?.data;
+
+  const firstName = profile?.name ? profile.name.split(" ")[0] : "";
+  const initials = profile?.name
+    ? profile.name
+        .split(" ")
+        .map((w) => w[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase()
+    : "";
+
+  const balanceSol = profile?.wallet_balance_sol ?? "0";
 
   return (
     <div className="py-6 space-y-6">
@@ -24,7 +51,8 @@ export default function HomePage() {
         <div>
           <h1 className="text-xl font-bold tracking-tight">CryptoLend</h1>
           <p className="text-sm text-muted-foreground">
-            {getGreeting()}, {firstName}
+            {getGreeting()}
+            {firstName ? `, ${firstName}` : ""}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -32,13 +60,12 @@ export default function HomePage() {
             <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
               Balance
             </p>
-            <p className="text-sm font-bold">
-              {user.balance.toLocaleString()} SOL
-            </p>
+            <p className="text-sm font-bold">{balanceSol} SOL</p>
           </div>
-          <div className="w-9 h-9 rounded-full bg-foreground text-background flex items-center justify-center text-xs font-bold">
-            {user.initials}
-          </div>
+          <Avatar className="w-10 h-10">
+            <AvatarImage src={profile?.profile_photo_url ?? ""} />
+            <AvatarFallback>{initials || "??"}</AvatarFallback>
+          </Avatar>
         </div>
       </div>
 
@@ -49,11 +76,7 @@ export default function HomePage() {
             Available Balance
           </p>
           <p className="text-4xl font-bold mt-1">
-            {user.availableBalance.toFixed(4)}{" "}
-            <span className="text-xl font-semibold">SOL</span>
-          </p>
-          <p className="text-sm opacity-60 mt-0.5">
-            ≈ ${user.availableUsd.toLocaleString()} USD
+            {balanceSol} <span className="text-xl font-semibold">SOL</span>
           </p>
         </div>
         <div className="grid grid-cols-2 gap-3">
@@ -91,7 +114,9 @@ export default function HomePage() {
           <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
             Invested
           </p>
-          <p className="text-2xl font-bold mt-1">{user.invested.toFixed(4)}</p>
+          <p className="text-2xl font-bold mt-1">
+            {stats?.total_invested_sol ?? "0"}
+          </p>
           <p className="text-xs text-muted-foreground">SOL</p>
         </div>
         <div className="rounded-2xl bg-card border border-border p-4">
@@ -99,72 +124,80 @@ export default function HomePage() {
             Earnings
           </p>
           <p className="text-2xl font-bold mt-1 text-green-pos">
-            {user.earnings.toFixed(4)}
+            {stats?.total_earnings_sol ?? "0"}
           </p>
           <p className="text-xs text-muted-foreground">SOL</p>
         </div>
       </div>
 
-      {/* Active Investments */}
-      <section>
-        <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">
-          Active Investments
-        </h2>
-        <div className="rounded-2xl bg-card border border-border divide-y divide-border">
-          {loans
-            .filter((l) => l.status === "active")
-            .map((loan) => (
+      {/* Recent Investments */}
+      {stats?.recent_investments && stats.recent_investments.length > 0 && (
+        <section>
+          <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">
+            Active Investments
+          </h2>
+          <div className="rounded-2xl bg-card border border-border divide-y divide-border">
+            {stats.recent_investments.map((inv) => (
               <div
-                key={loan.id}
+                key={inv.id}
                 className="flex items-center justify-between px-4 py-3.5"
               >
                 <div>
-                  <p className="text-sm font-semibold">{loan.title}</p>
+                  <p className="text-sm font-semibold">Investment #{inv.id}</p>
                   <p className="text-xs text-muted-foreground">
-                    {loan.apr}% APR · Next: {loan.nextPayment}
+                    {formatDate(inv.created_at)}
                   </p>
                 </div>
                 <div className="text-right">
                   <p className="text-sm font-semibold text-green-pos">
-                    +{loan.userEarned.toFixed(4)} SOL
+                    {inv.amount_sol} SOL
                   </p>
-                  <span className="inline-block mt-0.5 rounded-full bg-green-pos/10 text-green-pos text-[10px] px-2 py-0.5 font-medium">
-                    active
+                  <span className="inline-block mt-0.5 rounded-full bg-green-pos/10 text-green-pos text-[10px] px-2 py-0.5 font-medium capitalize">
+                    {inv.status}
                   </span>
                 </div>
               </div>
             ))}
-        </div>
-      </section>
+          </div>
+        </section>
+      )}
 
       {/* Recent Transactions */}
-      <section>
-        <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">
-          Recent Transactions
-        </h2>
-        <div className="rounded-2xl bg-card border border-border divide-y divide-border">
-          {transactions.map((tx) => (
-            <div
-              key={tx.id}
-              className="flex items-center justify-between px-4 py-3.5"
-            >
-              <div>
-                <p className="text-sm font-medium">{tx.label}</p>
-                <p className="text-xs text-muted-foreground">{tx.date}</p>
-              </div>
-              <p
-                className={cn(
-                  "text-sm font-semibold",
-                  tx.positive ? "text-green-pos" : "text-red-neg",
-                )}
+      {stats?.recent_transactions && stats.recent_transactions.length > 0 && (
+        <section>
+          <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">
+            Recent Transactions
+          </h2>
+          <div className="rounded-2xl bg-card border border-border divide-y divide-border">
+            {stats.recent_transactions.map((tx) => (
+              <div
+                key={tx.id}
+                className="flex items-center justify-between px-4 py-3.5"
               >
-                {tx.positive ? "+" : "-"}
-                {tx.amount.toFixed(tx.amount < 1 ? 3 : 0)} SOL
-              </p>
-            </div>
-          ))}
-        </div>
-      </section>
+                <div>
+                  <p className="text-sm font-medium capitalize">
+                    {tx.category}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {formatDate(tx.processed_at)}
+                  </p>
+                </div>
+                <p
+                  className={cn(
+                    "text-sm font-semibold",
+                    tx.direction === "credit"
+                      ? "text-green-pos"
+                      : "text-red-neg",
+                  )}
+                >
+                  {tx.direction === "credit" ? "+" : "-"}
+                  {tx.amount_sol} SOL
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

@@ -1,11 +1,24 @@
 "use client";
 
-import { user } from "@/lib/mock-data";
-import { Bell, Lock, HelpCircle, ChevronRight } from "lucide-react";
-import Image from "next/image";
-import { toast } from "sonner";
-import Link from "next/link";
 import React from "react";
+
+import {
+  Bell,
+  BotIcon,
+  ChevronRight,
+  HelpCircle,
+  Lock,
+  Pencil,
+} from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useCookies } from "react-cookie";
+import { toast } from "sonner";
+
+import { useProfile } from "@/hooks/use-profile";
+import { useAuthStore } from "@/store/auth-store";
+import { Button } from "@/components/ui/button";
 
 type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>;
@@ -13,12 +26,19 @@ type BeforeInstallPromptEvent = Event & {
 };
 
 const menuItems = [
-  { icon: Bell, label: "Notifications", href: "#" },
-  { icon: Lock, label: "Security", href: "#" },
+  { icon: Bell, label: "Notifications", href: "/app/notifications" },
+  { icon: Lock, label: "Security", href: "/app/profile/security" },
   { icon: HelpCircle, label: "Help & support", href: "#" },
 ];
 
 export default function ProfilePage() {
+  const router = useRouter();
+  const clearAuth = useAuthStore((s) => s.clearAuth);
+  const [, , removeCookie] = useCookies(["auth_token"]);
+  const { data } = useProfile();
+
+  const profile = data?.data;
+
   const [deferredPrompt, setDeferredPrompt] =
     React.useState<BeforeInstallPromptEvent | null>(null);
   const [isIos, setIsIos] = React.useState(false);
@@ -92,6 +112,22 @@ export default function ProfilePage() {
     }
   };
 
+  const handleLogout = () => {
+    clearAuth();
+    removeCookie("auth_token", { path: "/" });
+    toast.success("Logged out.");
+    router.push("/auth/login");
+  };
+
+  const initials = profile?.name
+    ? profile.name
+        .split(" ")
+        .map((w) => w[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase()
+    : "??";
+
   return (
     <div className="py-6 space-y-6">
       <h1 className="text-xl font-bold tracking-tight">Profile</h1>
@@ -99,38 +135,59 @@ export default function ProfilePage() {
 
       {/* User card */}
       <div className="rounded-2xl bg-card border border-border p-4 space-y-4">
-        <div className="flex items-center gap-3">
-          <div className="w-14 h-14 rounded-full bg-muted overflow-hidden flex items-center justify-center">
-            <div className="w-full h-full bg-muted-foreground/20 flex items-center justify-center text-lg font-bold text-muted-foreground">
-              {user.initials}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-14 h-14 rounded-full bg-muted overflow-hidden flex items-center justify-center">
+              {profile?.profile_photo_url ? (
+                <Image
+                  src={profile.profile_photo_url}
+                  alt={profile.name}
+                  width={56}
+                  height={56}
+                  unoptimized
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-muted-foreground/20 flex items-center justify-center text-lg font-bold text-muted-foreground">
+                  {initials}
+                </div>
+              )}
+            </div>
+            <div>
+              <p className="text-base font-bold">{profile?.name ?? ""}</p>
+              <p className="text-sm text-muted-foreground">
+                {profile?.email ?? ""}
+              </p>
             </div>
           </div>
-          <div>
-            <p className="text-base font-bold">{user.name}</p>
-            <p className="text-sm text-muted-foreground">{user.email}</p>
-          </div>
+          <Link
+            href="/app/profile/edit"
+            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors border border-border rounded-lg px-2.5 py-1.5"
+          >
+            <Pencil size={13} />
+            Edit
+          </Link>
         </div>
 
         <div className="divide-y divide-border">
           {[
             {
               label: "Account type",
-              value: user.accountType,
+              value: profile?.role ?? "—",
               badge: "neutral",
             },
-            { label: "KYC status", value: user.kycStatus, badge: "green" },
-            { label: "Member since", value: user.memberSince, badge: "none" },
+            {
+              label: "Member since",
+              value: profile?.member_since ?? "—",
+              badge: "none",
+            },
           ].map((r) => (
             <div
               key={r.label}
               className="flex items-center justify-between py-3 text-sm"
             >
               <span className="text-muted-foreground">{r.label}</span>
-              {r.badge === "green" ? (
-                <span className="rounded-full bg-green-pos/10 text-green-pos text-xs px-2.5 py-0.5 font-medium">
-                  {r.value}
-                </span>
-              ) : r.badge === "neutral" ? (
+              {r.badge === "neutral" ? (
                 <span className="rounded-full bg-muted text-foreground text-xs px-2.5 py-0.5 font-medium">
                   {r.value}
                 </span>
@@ -141,7 +198,17 @@ export default function ProfilePage() {
           ))}
         </div>
       </div>
-
+      {profile?.role === "admin" && (
+        <Button
+          type="button"
+          className="w-full rounded-full bg-white"
+          size="lg"
+          variant="outline"
+          onClick={handleLogout}
+        >
+          Admin Panel <BotIcon />
+        </Button>
+      )}
       {/* Persistent PWA install section (shows when not installed) */}
       {!isInstalled && (
         <div className="rounded-2xl bg-card border border-border p-4 space-y-3">
@@ -211,13 +278,16 @@ export default function ProfilePage() {
       </div>
 
       {/* Log out */}
-      <button
+
+      <Button
         type="button"
-        onClick={() => toast.info("Logged out")}
-        className="w-full rounded-2xl bg-destructive text-white py-3.5 font-semibold text-sm"
+        className="w-full rounded-full"
+        onClick={handleLogout}
+        size="lg"
+        variant="destructive"
       >
         Log Out
-      </button>
+      </Button>
     </div>
   );
 }

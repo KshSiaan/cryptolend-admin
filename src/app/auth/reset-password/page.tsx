@@ -1,34 +1,60 @@
 "use client";
-import { useState, Suspense } from "react";
+import { Suspense, useState } from "react";
+
+import { useMutation } from "@tanstack/react-query";
+import { Check } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Card, CardContent } from "@/components/ui/card";
+import { toast } from "sonner";
+
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Check } from "lucide-react";
+import { howl } from "@/lib/utils";
+import type { ResetPasswordBody } from "@/types/auth";
+import type { ApiResponse } from "@/types/base";
 
 function ResetPasswordContent() {
   const router = useRouter();
   const params = useSearchParams();
   const email = params.get("email") ?? "";
+  const token = params.get("token") ?? "";
 
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [done, setDone] = useState(false);
-  const [error, setError] = useState("");
+
+  const mutation = useMutation({
+    mutationFn: (body: ResetPasswordBody) =>
+      howl<ApiResponse<null>>("/auth/forgot-password/reset", {
+        method: "POST",
+        body,
+      }),
+    onSuccess: (data) => {
+      toast.success(data.message);
+      setDone(true);
+    },
+    onError: (err: Error) => {
+      toast.error(err.message);
+    },
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (password !== confirm) {
-      setError("Passwords do not match.");
+      toast.error("Passwords do not match.");
       return;
     }
     if (password.length < 8) {
-      setError("Password must be at least 8 characters.");
+      toast.error("Password must be at least 8 characters.");
       return;
     }
-    setError("");
-    setDone(true);
+    mutation.mutate({
+      email,
+      password,
+      password_confirmation: confirm,
+      password_reset_token: token,
+    });
   };
 
   if (done) {
@@ -89,11 +115,8 @@ function ResetPasswordContent() {
               autoComplete="new-password"
             />
           </div>
-          {error && (
-            <p className="text-xs text-destructive">{error}</p>
-          )}
-          <Button type="submit" className="w-full">
-            Reset password
+          <Button type="submit" className="w-full" disabled={mutation.isPending}>
+            {mutation.isPending ? "Resetting…" : "Reset password"}
           </Button>
         </form>
       </CardContent>

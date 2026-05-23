@@ -1,108 +1,68 @@
 "use client";
+
 import { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+
+import Image from "next/image";
+import { useCookies } from "react-cookie";
+import { toast } from "sonner";
+
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogCancel,
-  AlertDialogAction,
-} from "@/components/ui/alert-dialog";
-import { Eye } from "lucide-react";
-import { cn } from "@/lib/utils";
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import { useAdminUsers } from "@/hooks/use-admin-users";
+import { howl } from "@/lib/utils";
+import type { AdminUser } from "@/types/auth";
+import type { ApiResponse } from "@/types/base";
 
-type UserStatus = "active" | "Suspended";
+const statusBadge: Record<string, string> = {
+  active: "bg-green-100 text-green-700",
+  suspended: "bg-red-100 text-red-600",
+};
 
-interface User {
-  id: number;
-  name: string;
-  email: string;
-  balance: string;
-  invested: string;
-  status: UserStatus;
-}
-
-const initialUsers: User[] = [
-  {
-    id: 1,
-    name: "Alex Kim",
-    email: "alex@email.com",
-    balance: "1.842 USDT",
-    invested: "0.95 USDT",
-    status: "active",
-  },
-  {
-    id: 2,
-    name: "Maria Santos",
-    email: "maria@email.com",
-    balance: "3.210 USDT",
-    invested: "2.10 USDT",
-    status: "active",
-  },
-  {
-    id: 3,
-    name: "James Wu",
-    email: "james@email.com",
-    balance: "0.580 USDT",
-    invested: "0.50 USDT",
-    status: "active",
-  },
-  {
-    id: 4,
-    name: "Priya Pate",
-    email: "priya@email.com",
-    balance: "0.000 USDT",
-    invested: "0.00 USDT",
-    status: "active",
-  },
-  {
-    id: 5,
-    name: "Alex Kim",
-    email: "alex@email.com",
-    balance: "1.842 USDT",
-    invested: "0.95 USDT",
-    status: "active",
-  },
-  {
-    id: 6,
-    name: "Maria Santos",
-    email: "maria@email.com",
-    balance: "3.210 USDT",
-    invested: "2.10 USDT",
-    status: "Suspended",
-  },
-];
-
-const PAGE_SIZE = 10;
-
-function UserInitials({ name }: { name: string }) {
-  const initials = name
+function UserAvatar({ user }: { user: AdminUser }) {
+  if (user.profile_photo_url) {
+    return (
+      <Image
+        src={user.profile_photo_url}
+        alt={user.name}
+        width={36}
+        height={36}
+        className="size-9 rounded-full object-cover shrink-0 border border-border"
+      />
+    );
+  }
+  const initials = user.name
     .split(" ")
     .map((n) => n[0])
     .join("")
     .slice(0, 2)
     .toUpperCase();
   return (
-    <div className="size-10 rounded-full bg-muted flex items-center justify-center shrink-0 border border-border">
+    <div className="size-9 rounded-full bg-muted flex items-center justify-center shrink-0 border border-border">
       <span className="text-xs font-semibold text-muted-foreground">
         {initials}
       </span>
@@ -110,217 +70,278 @@ function UserInitials({ name }: { name: string }) {
   );
 }
 
-export default function UsersPage() {
-  const [users, setUsers] = useState<User[]>(initialUsers);
-  const [page, setPage] = useState(1);
-  const [viewTarget, setViewTarget] = useState<User | null>(null);
-  const [suspendTarget, setSuspendTarget] = useState<User | null>(null);
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
 
-  const totalPages = Math.ceil(users.length / PAGE_SIZE);
-  const paged = users.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+function UserDetailDialog({
+  user,
+  onClose,
+  onStatusChange,
+}: {
+  user: AdminUser;
+  onClose: () => void;
+  onStatusChange: (updated: AdminUser) => void;
+}) {
+  const [cookies] = useCookies(["auth_token"]);
+  const token = cookies.auth_token as string | undefined;
+  const [confirmAction, setConfirmAction] = useState<
+    "suspend" | "activate" | null
+  >(null);
+  const [pending, setPending] = useState(false);
 
-  const handleSuspend = () => {
-    if (!suspendTarget) return;
-    setUsers((prev) =>
-      prev.map((u) =>
-        u.id === suspendTarget.id ? { ...u, status: "Suspended" } : u,
-      ),
-    );
-    setSuspendTarget(null);
-    setViewTarget(null);
-  };
-
-  const viewUser = viewTarget
-    ? (users.find((u) => u.id === viewTarget.id) ?? viewTarget)
-    : null;
+  async function handleStatusUpdate() {
+    if (!token || !confirmAction) return;
+    const newStatus = confirmAction === "suspend" ? "suspended" : "active";
+    setPending(true);
+    try {
+      const res = await howl<ApiResponse<AdminUser>>(
+        `/admin/users/${user.id}/status`,
+        { method: "PATCH", token, body: { status: newStatus } },
+      );
+      toast.success(
+        `User ${newStatus === "active" ? "activated" : "suspended"}.`,
+      );
+      setConfirmAction(null);
+      onStatusChange(res.data);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Status update failed.");
+    } finally {
+      setPending(false);
+    }
+  }
 
   return (
-    <div className="p-6">
-      <Card className="shadow-none">
-        <CardContent className="p-6">
-          <h2 className="text-base font-semibold mb-4">All users</h2>
-          <Table>
-            <TableHeader>
-              <TableRow className="border-b-0">
-                <TableHead className="text-muted-foreground font-normal pl-0">
-                  User
-                </TableHead>
-                <TableHead className="text-muted-foreground font-normal">
-                  Email
-                </TableHead>
-                <TableHead className="text-muted-foreground font-normal">
-                  Available Balance
-                </TableHead>
-                <TableHead className="text-muted-foreground font-normal">
-                  Invested
-                </TableHead>
-                <TableHead className="text-muted-foreground font-normal">
-                  Status
-                </TableHead>
-                <TableHead className="text-muted-foreground font-normal">
-                  Actions
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {paged.map((u) => (
-                <TableRow key={u.id} className="border-b border-border">
-                  <TableCell className="pl-0 font-medium">{u.name}</TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {u.email}
-                  </TableCell>
-                  <TableCell>{u.balance}</TableCell>
-                  <TableCell>{u.invested}</TableCell>
-                  <TableCell>
-                    <span
-                      className={cn(
-                        "text-xs font-medium px-2.5 py-0.5 rounded-full border",
-                        u.status === "active"
-                          ? "bg-green-100 text-green-700 border-green-200"
-                          : "bg-red-100 text-red-600 border-red-200",
-                      )}
-                    >
-                      {u.status}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <Button
-                      variant="outline"
-                      size="icon-sm"
-                      onClick={() => setViewTarget(u)}
-                    >
-                      <Eye className="size-3.5" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-
-          <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
-            <p className="text-sm text-muted-foreground">
-              Page {page} of {totalPages}
-            </p>
-            <div className="flex items-center gap-1">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
-              >
-                Previous
-              </Button>
-              <Button variant="outline" size="icon-sm" className="font-medium">
-                {page}
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={page === totalPages}
-              >
-                Next
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* User Details Dialog */}
+    <>
       <Dialog
-        open={!!viewTarget}
-        onOpenChange={(o) => !o && setViewTarget(null)}
+        open
+        onOpenChange={(o) => {
+          if (!o) onClose();
+        }}
       >
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
             <DialogTitle>User Details</DialogTitle>
           </DialogHeader>
-          {viewUser && (
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <UserInitials name={viewUser.name} />
-                <div>
-                  <p className="text-sm font-semibold">{viewUser.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {viewUser.email}
-                  </p>
-                </div>
-              </div>
-              <div className="space-y-3 pt-1">
-                <div className="flex items-center justify-between border-b border-border pb-3">
-                  <span className="text-sm text-muted-foreground">
-                    Available
-                  </span>
-                  <span className="text-sm font-medium">
-                    {viewUser.balance}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between border-b border-border pb-3">
-                  <span className="text-sm text-muted-foreground">
-                    Invested
-                  </span>
-                  <span className="text-sm font-medium">
-                    {viewUser.invested}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Status</span>
-                  <span
-                    className={cn(
-                      "text-sm font-semibold",
-                      viewUser.status === "active"
-                        ? "text-[oklch(0.52_0.165_145)]"
-                        : "text-destructive",
-                    )}
-                  >
-                    {viewUser.status === "active" ? "Active" : "Suspended"}
-                  </span>
-                </div>
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <UserAvatar user={user} />
+              <div>
+                <p className="text-sm font-semibold">{user.name}</p>
+                <p className="text-xs text-muted-foreground">{user.email}</p>
               </div>
             </div>
-          )}
+            <div className="rounded-lg border border-border divide-y divide-border text-sm">
+              {[
+                { label: "Role", value: user.role },
+                { label: "Status", value: user.status },
+                { label: "Balance", value: `${user.wallet.balance_sol} SOL` },
+                {
+                  label: "Frozen",
+                  value: `${user.wallet.frozen_balance_sol} SOL`,
+                },
+                { label: "Joined", value: formatDate(user.created_at) },
+              ].map((r) => (
+                <div key={r.label} className="flex justify-between px-3 py-2">
+                  <span className="text-muted-foreground">{r.label}</span>
+                  <span className="font-medium capitalize">{r.value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
           <DialogFooter>
-            {viewUser?.status === "active" && (
+            {user.status === "active" ? (
               <Button
                 variant="outline"
-                onClick={() => viewTarget && setSuspendTarget(viewTarget)}
+                className="text-destructive hover:text-destructive"
+                onClick={() => setConfirmAction("suspend")}
               >
                 Suspend
               </Button>
+            ) : (
+              <Button
+                variant="outline"
+                onClick={() => setConfirmAction("activate")}
+              >
+                Activate
+              </Button>
             )}
-            <Button variant="outline" onClick={() => setViewTarget(null)}>
+            <Button variant="outline" onClick={onClose}>
               Close
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Suspend AlertDialog */}
       <AlertDialog
-        open={!!suspendTarget}
-        onOpenChange={(o) => !o && setSuspendTarget(null)}
+        open={!!confirmAction}
+        onOpenChange={(o) => {
+          if (!o) setConfirmAction(null);
+        }}
       >
         <AlertDialogContent size="sm">
           <AlertDialogHeader>
-            <AlertDialogTitle>Suspend User</AlertDialogTitle>
+            <AlertDialogTitle>
+              {confirmAction === "suspend" ? "Suspend" : "Activate"} User
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to suspend{" "}
-              <span className="font-semibold text-foreground">
-                {suspendTarget?.name}
-              </span>
-              ? This action cannot be undone.
+              {confirmAction === "suspend"
+                ? `Suspend ${user.name}? They will lose access to the platform.`
+                : `Activate ${user.name}? They will regain access to the platform.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setSuspendTarget(null)}>
+            <AlertDialogCancel
+              disabled={pending}
+              onClick={() => setConfirmAction(null)}
+            >
               Cancel
             </AlertDialogCancel>
-            <AlertDialogAction onClick={handleSuspend}>
-              Suspend
+            <AlertDialogAction
+              variant={confirmAction === "suspend" ? "destructive" : "default"}
+              disabled={pending}
+              onClick={handleStatusUpdate}
+            >
+              {pending
+                ? "Updating…"
+                : confirmAction === "suspend"
+                  ? "Suspend"
+                  : "Activate"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+    </>
+  );
+}
+
+export default function UsersPage() {
+  const [page, setPage] = useState(1);
+  const [viewing, setViewing] = useState<AdminUser | null>(null);
+
+  const { data, isLoading, refetch } = useAdminUsers(page);
+
+  const users = data?.data?.data ?? [];
+  const lastPage = data?.data?.last_page ?? 1;
+  const total = data?.data?.total ?? 0;
+
+  function handleStatusChange(updated: AdminUser) {
+    setViewing(updated);
+    void refetch();
+  }
+
+  return (
+    <div className="p-6 space-y-6">
+      <h1 className="text-2xl font-semibold tracking-tight">Users</h1>
+
+      <Card className="shadow-none">
+        <CardContent className="p-0">
+          {isLoading ? (
+            <div className="p-6 space-y-3">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="h-14 rounded bg-muted animate-pulse" />
+              ))}
+            </div>
+          ) : users.length === 0 ? (
+            <div className="p-10 text-center text-sm text-muted-foreground">
+              No users found.
+            </div>
+          ) : (
+            <div className="divide-y divide-border">
+              {users.map((user) => (
+                <div
+                  key={user.id}
+                  className="flex items-center justify-between px-5 py-3.5 gap-4"
+                >
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <UserAvatar user={user} />
+                    <div className="min-w-0 space-y-0.5">
+                      <p className="text-sm font-semibold truncate">
+                        {user.name}
+                      </p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {user.email}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="hidden sm:flex items-center gap-4 text-xs text-muted-foreground shrink-0">
+                    <span>{user.wallet.balance_sol} SOL</span>
+                    <span className="text-foreground/40">·</span>
+                    <span>{user.wallet.frozen_balance_sol} frozen</span>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Badge
+                      className={`${statusBadge[user.status] ?? ""} border-0 capitalize`}
+                    >
+                      {user.status}
+                    </Badge>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setViewing(user)}
+                    >
+                      View
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {!isLoading && total > 0 && (
+        <div className="flex items-center justify-between text-sm text-muted-foreground">
+          <span>
+            {total} user{total !== 1 ? "s" : ""}
+          </span>
+          {lastPage > 1 && (
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    aria-disabled={page === 1}
+                    className={
+                      page === 1
+                        ? "pointer-events-none opacity-50"
+                        : "cursor-pointer"
+                    }
+                  />
+                </PaginationItem>
+                <PaginationItem>
+                  <span className="px-3 py-2">
+                    {page} / {lastPage}
+                  </span>
+                </PaginationItem>
+                <PaginationItem>
+                  <PaginationNext
+                    onClick={() => setPage((p) => Math.min(lastPage, p + 1))}
+                    aria-disabled={page === lastPage}
+                    className={
+                      page === lastPage
+                        ? "pointer-events-none opacity-50"
+                        : "cursor-pointer"
+                    }
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          )}
+        </div>
+      )}
+
+      {viewing && (
+        <UserDetailDialog
+          user={viewing}
+          onClose={() => setViewing(null)}
+          onStatusChange={handleStatusChange}
+        />
+      )}
     </div>
   );
 }

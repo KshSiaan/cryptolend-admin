@@ -1,14 +1,21 @@
 "use client";
-import { useState, Suspense } from "react";
+import { Suspense, useState } from "react";
+
+import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Card, CardContent } from "@/components/ui/card";
+import { toast } from "sonner";
+
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   InputOTP,
   InputOTPGroup,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
+import { howl } from "@/lib/utils";
+import type { ForgotPasswordBody, ForgotPasswordVerifyBody, ForgotPasswordVerifyResponseData } from "@/types/auth";
+import type { ApiResponse } from "@/types/base";
 
 function VerifyOTPContent() {
   const router = useRouter();
@@ -16,15 +23,46 @@ function VerifyOTPContent() {
   const email = params.get("email") ?? "";
   const [otp, setOtp] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (otp.length < 6) return;
-    router.push(`/auth/reset-password?email=${encodeURIComponent(email)}`);
-  };
-
   const masked = email
     ? email.replace(/(.{2})(.*)(@.*)/, (_, a, b, c) => a + "*".repeat(b.length) + c)
     : "";
+
+  const verifyMutation = useMutation({
+    mutationFn: (body: ForgotPasswordVerifyBody) =>
+      howl<ApiResponse<ForgotPasswordVerifyResponseData>>("/auth/forgot-password/verify", {
+        method: "POST",
+        body,
+      }),
+    onSuccess: (data) => {
+      const { password_reset_token } = data.data;
+      router.push(
+        `/auth/reset-password?email=${encodeURIComponent(email)}&token=${encodeURIComponent(password_reset_token)}`
+      );
+    },
+    onError: (err: Error) => {
+      toast.error(err.message);
+    },
+  });
+
+  const resendMutation = useMutation({
+    mutationFn: (body: ForgotPasswordBody) =>
+      howl<ApiResponse<null>>("/auth/forgot-password", {
+        method: "POST",
+        body,
+      }),
+    onSuccess: () => {
+      toast.success("Code resent.");
+    },
+    onError: (err: Error) => {
+      toast.error(err.message);
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (otp.length < 6) return;
+    verifyMutation.mutate({ email, otp });
+  };
 
   return (
     <Card className="shadow-none">
@@ -38,11 +76,7 @@ function VerifyOTPContent() {
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="flex justify-center">
-            <InputOTP
-              maxLength={6}
-              value={otp}
-              onChange={setOtp}
-            >
+            <InputOTP maxLength={6} value={otp} onChange={setOtp}>
               <InputOTPGroup>
                 <InputOTPSlot index={0} className="size-11 text-base" />
                 <InputOTPSlot index={1} className="size-11 text-base" />
@@ -53,25 +87,27 @@ function VerifyOTPContent() {
               </InputOTPGroup>
             </InputOTP>
           </div>
-          <Button type="submit" className="w-full" disabled={otp.length < 6}>
-            Verify code
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={otp.length < 6 || verifyMutation.isPending}
+          >
+            {verifyMutation.isPending ? "Verifying…" : "Verify code"}
           </Button>
         </form>
         <p className="text-center text-sm text-muted-foreground">
           Didn&apos;t receive a code?{" "}
           <button
             type="button"
-            className="font-medium text-foreground hover:underline"
-            onClick={() => router.push(`/auth/forgot-password`)}
+            className="font-medium text-foreground hover:underline disabled:opacity-50"
+            disabled={resendMutation.isPending}
+            onClick={() => resendMutation.mutate({ email })}
           >
-            Resend
+            {resendMutation.isPending ? "Sending…" : "Resend"}
           </button>
         </p>
         <p className="text-center text-sm text-muted-foreground">
-          <Link
-            href="/auth/login"
-            className="font-medium text-foreground hover:underline"
-          >
+          <Link href="/auth/login" className="font-medium text-foreground hover:underline">
             Back to sign in
           </Link>
         </p>

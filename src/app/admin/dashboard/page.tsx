@@ -1,51 +1,52 @@
+"use client";
+
 import { Card, CardContent } from "@/components/ui/card";
+import { useAdminDashboardStats } from "@/hooks/use-admin-dashboard-stats";
+import { cn } from "@/lib/utils";
 
-const stats = [
-  { label: "Total users", value: "128", valueClass: "" },
-  { label: "Active loans", value: "3", valueClass: "" },
-  { label: "Total invested", value: "24.6 USDT", valueClass: "" },
-  {
-    label: "Repaid this month",
-    value: "1.32 USDT",
-    valueClass: "text-[oklch(0.52_0.165_145)]",
-  },
-];
-
-const activities = [
-  {
-    title: "New Deposit",
-    sub: "alex@email.com · just now",
-    badge: "+1.0 USDT",
-    badgeClass: "text-[oklch(0.52_0.165_145)]",
-  },
-  {
-    title: "Investment - Loan #3",
-    sub: "maria@email.com",
-    badge: "-0.5 USDT",
-    badgeClass: "text-destructive",
-  },
-  {
-    title: "Repayment processed",
-    sub: "Loan #5",
-    badge: "+0.031 USDT",
-    badgeClass: "text-[oklch(0.52_0.165_145)]",
-  },
-  {
-    title: "New user registered",
-    sub: "priya@email.com",
-    badge: "new",
-    badgeClass:
-      "bg-blue-100 text-blue-600 text-xs px-2 py-0.5 rounded-full font-medium",
-  },
-  {
-    title: "Investment - Loan #1",
-    sub: "Ronald@email.com",
-    badge: "-0.45 USDT",
-    badgeClass: "text-destructive",
-  },
-];
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
 
 export default function DashboardPage() {
+  const { data, isLoading } = useAdminDashboardStats();
+  const stats = data?.data;
+
+  const statCards = stats
+    ? [
+        {
+          label: "Total users",
+          value: String(stats.total_users),
+          valueClass: "",
+        },
+        {
+          label: "Active loans",
+          value: String(stats.active_loans),
+          valueClass: "",
+        },
+        {
+          label: "Total invested",
+          value: `${stats.total_invested_sol} SOL`,
+          valueClass: "",
+        },
+        {
+          label: `Repaid this month (${stats.month})`,
+          value: `${stats.total_repaid_this_month_sol} SOL`,
+          valueClass: "text-green-pos",
+        },
+      ]
+    : [
+        { label: "Total users", value: "—", valueClass: "" },
+        { label: "Active loans", value: "—", valueClass: "" },
+        { label: "Total invested", value: "—", valueClass: "" },
+        { label: "Repaid this month", value: "—", valueClass: "" },
+      ];
+
   return (
     <div className="p-6 space-y-6">
       <h1 className="text-2xl font-semibold tracking-tight">
@@ -53,15 +54,19 @@ export default function DashboardPage() {
       </h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        {stats.map((s) => (
+        {statCards.map((s) => (
           <Card key={s.label} className="shadow-none">
             <CardContent className="p-6 flex flex-col gap-2">
               <p className="text-sm text-muted-foreground">{s.label}</p>
-              <p
-                className={`text-3xl font-bold tracking-tight ${s.valueClass}`}
-              >
-                {s.value}
-              </p>
+              {isLoading ? (
+                <div className="h-9 w-24 rounded bg-muted animate-pulse" />
+              ) : (
+                <p
+                  className={`text-3xl font-bold tracking-tight ${s.valueClass}`}
+                >
+                  {s.value}
+                </p>
+              )}
             </CardContent>
           </Card>
         ))}
@@ -69,28 +74,44 @@ export default function DashboardPage() {
 
       <Card className="shadow-none">
         <CardContent className="p-6">
-          <h2 className="text-base font-semibold mb-4">Recent Activities</h2>
-          <div className="divide-y divide-border">
-            {activities.map((a, i) => (
-              <div
-                // biome-ignore lint/suspicious/noArrayIndexKey: mock data
-                key={i}
-                className="flex items-center justify-between py-3.5 first:pt-0 last:pb-0"
-              >
-                <div className="space-y-0.5">
-                  <p className="text-sm font-medium">{a.title}</p>
-                  <p className="text-xs text-muted-foreground">{a.sub}</p>
-                </div>
-                {a.title === "New user registered" ? (
-                  <span className={a.badgeClass}>{a.badge}</span>
-                ) : (
-                  <span className={`text-sm font-medium ${a.badgeClass}`}>
-                    {a.badge}
+          <h2 className="text-base font-semibold mb-4">Recent Transactions</h2>
+          {isLoading ? (
+            <div className="space-y-3">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="h-10 rounded bg-muted animate-pulse" />
+              ))}
+            </div>
+          ) : (
+            <div className="divide-y divide-border">
+              {(stats?.recent_transactions ?? []).map((tx) => (
+                <div
+                  key={tx.id}
+                  className="flex items-center justify-between py-3.5 first:pt-0 last:pb-0"
+                >
+                  <div className="space-y-0.5 min-w-0">
+                    <p className="text-sm font-medium">
+                      {tx.transaction_label}
+                    </p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {tx.user.name} · {tx.user.email} ·{" "}
+                      {formatDate(tx.processed_at)}
+                    </p>
+                  </div>
+                  <span
+                    className={cn(
+                      "text-sm font-semibold shrink-0 ml-4",
+                      tx.direction === "credit"
+                        ? "text-green-pos"
+                        : "text-destructive",
+                    )}
+                  >
+                    {tx.direction === "credit" ? "+" : "-"}
+                    {tx.amount_sol} SOL
                   </span>
-                )}
-              </div>
-            ))}
-          </div>
+                </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

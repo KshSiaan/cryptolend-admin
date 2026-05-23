@@ -1,32 +1,39 @@
 "use client";
 import * as React from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+
 import {
-  LayoutDashboard,
-  Landmark,
   ArrowDownToLine,
-  Users,
   ArrowLeftRight,
+  Landmark,
+  LayoutDashboard,
+  LogOut,
   Settings,
+  Users,
+  Wallet,
 } from "lucide-react";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { useCookies } from "react-cookie";
+
+import { Button } from "@/components/ui/button";
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
+  SidebarGroup,
+  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarRail,
-  SidebarGroup,
-  SidebarGroupLabel,
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
+import { useAuthStore } from "@/store/auth-store";
 
 const navItems = [
   { title: "Dashboard", url: "/admin/dashboard", icon: LayoutDashboard },
   { title: "Loans", url: "/admin/loans", icon: Landmark },
+  { title: "Deposits", url: "/admin/deposits", icon: Wallet },
   { title: "Withdrawal", url: "/admin/withdrawal", icon: ArrowDownToLine },
   { title: "Users", url: "/admin/users", icon: Users },
   { title: "Transactions", url: "/admin/transactions", icon: ArrowLeftRight },
@@ -35,6 +42,20 @@ const navItems = [
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname();
+  const router = useRouter();
+  const user = useAuthStore((s) => s.user);
+  const clearAuth = useAuthStore((s) => s.clearAuth);
+  const [, , removeCookie] = useCookies(["auth_token"]);
+
+  function handleLogout() {
+    clearAuth();
+    removeCookie("auth_token", { path: "/" });
+    router.push("/auth/login");
+  }
+
+  const initials = user?.name
+    ? user.name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase()
+    : "A";
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -85,22 +106,30 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="px-3 py-3">
+      <SidebarFooter className="px-3 py-3 space-y-2">
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full justify-start gap-2 text-destructive border-destructive/40 hover:bg-destructive/10 hover:text-destructive group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
+          onClick={handleLogout}
+        >
+          <LogOut className="size-4 shrink-0" />
+          <span className="group-data-[collapsible=icon]:hidden">Log out</span>
+        </Button>
         <div className="flex items-center gap-2.5 px-1 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
           <div className="size-8 rounded-full bg-sidebar-accent flex items-center justify-center shrink-0">
             <span className="text-sidebar-accent-foreground font-semibold text-xs">
-              A
+              {initials}
             </span>
           </div>
           <div className="flex-1 min-w-0 group-data-[collapsible=icon]:hidden">
             <p className="text-sm font-semibold text-sidebar-foreground truncate">
-              Admin
+              {user?.name ?? "Admin"}
             </p>
             <p className="text-xs text-sidebar-foreground/50 truncate">
-              admin@gmail.com
+              {user?.email ?? ""}
             </p>
           </div>
-          {/* <ChevronsUpDown className="size-4 text-sidebar-foreground/40 shrink-0 group-data-[collapsible=icon]:hidden" /> */}
         </div>
       </SidebarFooter>
 

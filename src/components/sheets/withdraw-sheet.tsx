@@ -1,9 +1,12 @@
 "use client";
 
 import { useState } from "react";
+
+import { useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, Clock } from "lucide-react";
+import { useCookies } from "react-cookie";
 import { toast } from "sonner";
-import { user } from "@/lib/mock-data";
+
 import {
   Sheet,
   SheetContent,
@@ -11,37 +14,79 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { howl } from "@/lib/utils";
+import type { ApiResponse } from "@/types/base";
 
 type Step = "form" | "confirm" | "submitted";
 
-export function WithdrawSheet({ children }: { children: React.ReactNode }) {
+interface WithdrawResponseData {
+  withdrawal_request: {
+    id: number;
+    status: string;
+    amount_sol: string;
+    recipient_address: string;
+  };
+  wallet: {
+    available_balance_sol: string;
+  };
+}
+
+export function WithdrawSheet({
+  children,
+  availableSol = "0",
+}: {
+  children: React.ReactNode;
+  availableSol?: string;
+}) {
+  const queryClient = useQueryClient();
+  const [cookies] = useCookies(["auth_token"]);
+  const token = cookies.auth_token as string | undefined;
+
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<Step>("form");
   const [amount, setAmount] = useState("");
   const [address, setAddress] = useState("");
-  const [note, setNote] = useState("");
+  const [isPending, setIsPending] = useState(false);
 
+  const available = parseFloat(availableSol) || 0;
   const parsedAmount = parseFloat(amount) || 0;
-  const balanceAfter = user.availableBalance - parsedAmount;
+  const balanceAfter = available - parsedAmount;
 
   function handleNext() {
     if (!amount || parsedAmount <= 0) {
-      toast.error("Enter a valid amount");
+      toast.error("Enter a valid amount.");
       return;
     }
-    if (parsedAmount > user.availableBalance) {
-      toast.error("Insufficient balance");
+    if (parsedAmount > available) {
+      toast.error("Insufficient balance.");
       return;
     }
     if (!address.trim()) {
-      toast.error("Enter withdrawal address");
+      toast.error("Enter a recipient address.");
       return;
     }
     setStep("confirm");
   }
 
-  function handleSubmit() {
-    setStep("submitted");
+  async function handleSubmit() {
+    if (!token) return;
+    setIsPending(true);
+    try {
+      await howl<ApiResponse<WithdrawResponseData>>("/wallet/withdraw", {
+        method: "POST",
+        token,
+        body: { amount_sol: parsedAmount, recipient_address: address.trim() },
+      });
+      toast.success("Withdrawal request submitted.");
+      void queryClient.invalidateQueries({ queryKey: ["wallet-stats"] });
+      void queryClient.invalidateQueries({ queryKey: ["wallet-transactions"] });
+      void queryClient.invalidateQueries({ queryKey: ["withdrawal-requests"] });
+      setStep("submitted");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Submission failed.");
+    } finally {
+      setIsPending(false);
+    }
   }
 
   function handleClose() {
@@ -50,7 +95,6 @@ export function WithdrawSheet({ children }: { children: React.ReactNode }) {
       setStep("form");
       setAmount("");
       setAddress("");
-      setNote("");
     }, 300);
   }
 
@@ -83,7 +127,7 @@ export function WithdrawSheet({ children }: { children: React.ReactNode }) {
                   className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-ring"
                 />
                 <p className="text-xs text-muted-foreground">
-                  Available: {user.availableBalance.toFixed(4)} SOL
+                  Available: {available.toFixed(4)} SOL
                 </p>
               </div>
 
@@ -97,23 +141,6 @@ export function WithdrawSheet({ children }: { children: React.ReactNode }) {
                   placeholder="Solana wallet address"
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
-                  className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-ring"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label htmlFor="withdraw-note" className="text-sm font-medium">
-                  Note{" "}
-                  <span className="text-muted-foreground font-normal">
-                    (optional)
-                  </span>
-                </label>
-                <input
-                  id="withdraw-note"
-                  type="text"
-                  placeholder="Optional note"
-                  value={note}
-                  onChange={(e) => setNote(e.target.value)}
                   className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-ring"
                 />
               </div>
@@ -158,7 +185,6 @@ export function WithdrawSheet({ children }: { children: React.ReactNode }) {
                 { label: "Amount", value: `${parsedAmount.toFixed(4)} SOL` },
                 { label: "To", value: address },
                 { label: "Balance after", value: `${balanceAfter.toFixed(4)} SOL` },
-                { label: "Note", value: note || "—" },
               ].map((r) => (
                 <div
                   key={r.label}
@@ -176,16 +202,18 @@ export function WithdrawSheet({ children }: { children: React.ReactNode }) {
               <button
                 type="button"
                 onClick={() => setStep("form")}
-                className="rounded-2xl border border-border bg-card py-3.5 font-semibold text-sm"
+                disabled={isPending}
+                className="rounded-2xl border border-border bg-card py-3.5 font-semibold text-sm disabled:opacity-50"
               >
-                Cancel
+                Back
               </button>
               <button
                 type="button"
                 onClick={handleSubmit}
-                className="rounded-2xl bg-foreground text-background py-3.5 font-semibold text-sm"
+                disabled={isPending}
+                className="rounded-2xl bg-foreground text-background py-3.5 font-semibold text-sm disabled:opacity-50"
               >
-                Submit
+                {isPending ? "Submitting…" : "Submit"}
               </button>
             </div>
           </>
@@ -204,22 +232,13 @@ export function WithdrawSheet({ children }: { children: React.ReactNode }) {
               </span>{" "}
               is awaiting admin approval.
             </p>
-            <div className="grid grid-cols-2 gap-3 w-full mt-4">
-              <button
-                type="button"
-                onClick={handleClose}
-                className="rounded-2xl border border-border bg-card py-3.5 font-semibold text-sm"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleClose}
-                className="rounded-2xl bg-foreground text-background py-3.5 font-semibold text-sm"
-              >
-                Done
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={handleClose}
+              className="w-full rounded-2xl bg-foreground text-background py-3.5 font-semibold text-sm mt-4"
+            >
+              Done
+            </button>
           </div>
         )}
       </SheetContent>

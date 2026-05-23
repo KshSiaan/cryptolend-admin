@@ -1,10 +1,39 @@
 "use client";
+
 import { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+
+import { useCookies } from "react-cookie";
+import { toast } from "sonner";
+
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Pencil, Trash2 } from "lucide-react";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import {
   Select,
   SelectContent,
@@ -12,406 +41,568 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogCancel,
-  AlertDialogAction,
-} from "@/components/ui/alert-dialog";
-import { cn } from "@/lib/utils";
+import { useAdminLoans } from "@/hooks/use-admin-loans";
+import { howl } from "@/lib/utils";
+import type { AdminLoan } from "@/types/auth";
+import type { ApiResponse } from "@/types/base";
 
 type LoanStatus = "active" | "funded" | "repaying" | "closed";
 
-interface Loan {
-  id: number;
-  title: string;
-  sector: string;
-  raised: number;
-  goal: number;
-  unit: string;
-  rate: number;
-  term: number;
-  status: LoanStatus;
-}
-
-const initialLoans: Loan[] = [
-  {
-    id: 1,
-    title: "SME Working Capital",
-    sector: "Finance",
-    raised: 7.4,
-    goal: 10,
-    unit: "ETH",
-    rate: 14,
-    term: 12,
-    status: "active",
-  },
-  {
-    id: 2,
-    title: "Agri Equipment Loan",
-    sector: "Agriculture",
-    raised: 5,
-    goal: 5,
-    unit: "ETH",
-    rate: 12,
-    term: 6,
-    status: "funded",
-  },
-  {
-    id: 3,
-    title: "Tech Startup Bridge",
-    sector: "Technology",
-    raised: 11.2,
-    goal: 20,
-    unit: "ETH",
-    rate: 18,
-    term: 18,
-    status: "active",
-  },
-  {
-    id: 4,
-    title: "Real Estate Short-Term",
-    sector: "Real Estate",
-    raised: 1,
-    goal: 8,
-    unit: "ETH",
-    rate: 15,
-    term: 9,
-    status: "active",
-  },
-  {
-    id: 5,
-    title: "Import/Export Trade",
-    sector: "Trade",
-    raised: 6,
-    goal: 6,
-    unit: "ETH",
-    rate: 11,
-    term: 3,
-    status: "repaying",
-  },
-];
-
-const statusStyles: Record<LoanStatus, string> = {
-  active: "bg-green-100 text-green-700 border-green-200",
-  funded: "bg-blue-100 text-blue-700 border-blue-200",
-  repaying: "bg-yellow-100 text-yellow-700 border-yellow-200",
-  closed: "bg-muted text-muted-foreground border-border",
+const statusBadge: Record<string, string> = {
+  active: "bg-green-100 text-green-700",
+  funded: "bg-blue-100 text-blue-700",
+  repaying: "bg-yellow-100 text-yellow-700",
+  closed: "bg-muted text-muted-foreground",
 };
 
-const emptyForm = { title: "", sector: "", goal: 10, rate: 14, term: 12 };
+const SECTORS = ["Retail", "Agriculture", "Healthcare", "Manufacturing"];
 
-type FormState = typeof emptyForm;
+interface LoanFormState {
+  title: string;
+  sector: string;
+  description: string;
+  target_amount_sol: string;
+  apr_percent: string;
+  duraction_months: string;
+}
+
+const emptyForm: LoanFormState = {
+  title: "",
+  sector: "Retail",
+  description: "",
+  target_amount_sol: "",
+  apr_percent: "",
+  duraction_months: "",
+};
 
 function LoanFormFields({
   form,
   onChange,
-  showStatus,
-  status,
-  onStatusChange,
+  locked,
 }: {
-  form: FormState;
-  onChange: (f: FormState) => void;
-  showStatus?: boolean;
-  status?: LoanStatus;
-  onStatusChange?: (s: LoanStatus) => void;
+  form: LoanFormState;
+  onChange: (f: LoanFormState) => void;
+  locked?: boolean;
 }) {
-  const set = <K extends keyof FormState>(k: K, v: FormState[K]) =>
+  const set = <K extends keyof LoanFormState>(k: K, v: string) =>
     onChange({ ...form, [k]: v });
 
   return (
     <div className="space-y-4">
       <div className="space-y-1.5">
-        <Label htmlFor="loan-title">Loan title</Label>
+        <Label>Title</Label>
         <Input
-          id="loan-title"
           placeholder="e.g. SME Working Capital"
           value={form.title}
           onChange={(e) => set("title", e.target.value)}
         />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="loan-sector">Sector</Label>
-        <Input
-          id="loan-sector"
-          placeholder="e.g. Retail"
-          value={form.sector}
-          onChange={(e) => set("sector", e.target.value)}
+        <Label>Sector</Label>
+        <Select value={form.sector} onValueChange={(v) => set("sector", v)}>
+          <SelectTrigger className="w-full">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {SECTORS.map((s) => (
+              <SelectItem key={s} value={s}>
+                {s}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-1.5">
+        <Label>Description</Label>
+        <textarea
+          rows={3}
+          value={form.description}
+          onChange={(e) => set("description", e.target.value)}
+          className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring resize-none"
         />
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-3 gap-3">
         <div className="space-y-1.5">
-          <Label htmlFor="loan-goal">Target (USDT)</Label>
+          <Label>Target (SOL)</Label>
           <Input
-            id="loan-goal"
             type="number"
-            min={1}
-            value={form.goal}
-            onChange={(e) => set("goal", Number(e.target.value))}
+            min={0}
+            step="0.0001"
+            value={form.target_amount_sol}
+            onChange={(e) => set("target_amount_sol", e.target.value)}
+            disabled={locked}
           />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="loan-rate">APR (%)</Label>
+          <Label>APR (%)</Label>
           <Input
-            id="loan-rate"
+            type="number"
+            min={0}
+            step="0.01"
+            value={form.apr_percent}
+            onChange={(e) => set("apr_percent", e.target.value)}
+            disabled={locked}
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label>Duration (mo)</Label>
+          <Input
             type="number"
             min={1}
-            value={form.rate}
-            onChange={(e) => set("rate", Number(e.target.value))}
+            value={form.duraction_months}
+            onChange={(e) => set("duraction_months", e.target.value)}
+            disabled={locked}
           />
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1.5">
-          <Label htmlFor="loan-term">Duration (months)</Label>
-          <Input
-            id="loan-term"
-            type="number"
-            min={1}
-            value={form.term}
-            onChange={(e) => set("term", Number(e.target.value))}
-          />
-        </div>
-        {showStatus && onStatusChange && (
-          <div className="space-y-1.5">
-            <Label>Status</Label>
-            <Select
-              value={status}
-              onValueChange={(v) => onStatusChange(v as LoanStatus)}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="active">active</SelectItem>
-                <SelectItem value="funded">funded</SelectItem>
-                <SelectItem value="repaying">repaying</SelectItem>
-                <SelectItem value="closed">closed</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        )}
-      </div>
+      {locked && (
+        <p className="text-xs text-muted-foreground">
+          APR, target amount, and duration are locked after funding starts.
+        </p>
+      )}
     </div>
   );
 }
 
-export default function LoansPage() {
-  const [loans, setLoans] = useState<Loan[]>(initialLoans);
-  const [search, setSearch] = useState("");
+function CreateDialog({
+  onClose,
+  onSuccess,
+}: {
+  onClose: () => void;
+  onSuccess: () => void;
+}) {
+  const [cookies] = useCookies(["auth_token"]);
+  const token = cookies.auth_token as string | undefined;
+  const [form, setForm] = useState<LoanFormState>(emptyForm);
+  const [pending, setPending] = useState(false);
 
-  const [createOpen, setCreateOpen] = useState(false);
-  const [createForm, setCreateForm] = useState<FormState>(emptyForm);
-
-  const [editTarget, setEditTarget] = useState<Loan | null>(null);
-  const [editForm, setEditForm] = useState<FormState>(emptyForm);
-  const [editStatus, setEditStatus] = useState<LoanStatus>("active");
-
-  const [deleteTarget, setDeleteTarget] = useState<Loan | null>(null);
-
-  const filtered = loans.filter((l) =>
-    l.title.toLowerCase().includes(search.toLowerCase()),
-  );
-
-  const handleCreate = () => {
-    if (!createForm.title.trim()) return;
-    setLoans((prev) => [
-      ...prev,
-      {
-        id: Date.now(),
-        title: createForm.title,
-        sector: createForm.sector,
-        raised: 0,
-        goal: createForm.goal,
-        unit: "USDT",
-        rate: createForm.rate,
-        term: createForm.term,
-        status: "active",
-      },
-    ]);
-    setCreateOpen(false);
-    setCreateForm(emptyForm);
-  };
-
-  const openEdit = (loan: Loan) => {
-    setEditTarget(loan);
-    setEditForm({
-      title: loan.title,
-      sector: loan.sector,
-      goal: loan.goal,
-      rate: loan.rate,
-      term: loan.term,
-    });
-    setEditStatus(loan.status);
-  };
-
-  const handleEdit = () => {
-    if (!editTarget || !editForm.title.trim()) return;
-    setLoans((prev) =>
-      prev.map((l) =>
-        l.id === editTarget.id
-          ? {
-              ...l,
-              title: editForm.title,
-              sector: editForm.sector,
-              goal: editForm.goal,
-              rate: editForm.rate,
-              term: editForm.term,
-              status: editStatus,
-            }
-          : l,
-      ),
-    );
-    setEditTarget(null);
-  };
-
-  const handleDelete = () => {
-    if (!deleteTarget) return;
-    setLoans((prev) => prev.filter((l) => l.id !== deleteTarget.id));
-    setDeleteTarget(null);
-  };
+  async function handleSubmit() {
+    if (!token || !form.title.trim()) return;
+    setPending(true);
+    try {
+      await howl<ApiResponse<unknown>>("/admin/loans", {
+        method: "POST",
+        token,
+        body: {
+          title: form.title,
+          sector: form.sector,
+          description: form.description,
+          target_amount_sol: parseFloat(form.target_amount_sol),
+          apr_percent: parseFloat(form.apr_percent),
+          duraction_months: parseInt(form.duraction_months, 10),
+        },
+      });
+      toast.success("Loan created.");
+      onSuccess();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Create failed.");
+    } finally {
+      setPending(false);
+    }
+  }
 
   return (
-    <div className="p-6 space-y-4">
-      <div className="flex items-center gap-3">
+    <Dialog
+      open
+      onOpenChange={(o) => {
+        if (!o) onClose();
+      }}
+    >
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Create New Loan</DialogTitle>
+        </DialogHeader>
+        <LoanFormFields form={form} onChange={setForm} />
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose} disabled={pending}>
+            Cancel
+          </Button>
+          <Button onClick={handleSubmit} disabled={pending}>
+            {pending ? "Creating…" : "Create"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function EditDialog({
+  loan,
+  onClose,
+  onSuccess,
+}: {
+  loan: AdminLoan;
+  onClose: () => void;
+  onSuccess: () => void;
+}) {
+  const [cookies] = useCookies(["auth_token"]);
+  const token = cookies.auth_token as string | undefined;
+
+  const financiallyLocked = !["active"].includes(loan.status);
+
+  const [form, setForm] = useState<LoanFormState>({
+    title: loan.title,
+    sector: loan.sector,
+    description: loan.description,
+    target_amount_sol: loan.target_amount_sol,
+    apr_percent: loan.apr_percent,
+    duraction_months: String(loan.duraction_months),
+  });
+  const [statusVal, setStatusVal] = useState<LoanStatus>(
+    loan.status as LoanStatus,
+  );
+  const [pending, setPending] = useState(false);
+
+  async function handleSubmit() {
+    if (!token) return;
+    setPending(true);
+    try {
+      const body: Record<string, unknown> = {
+        title: form.title,
+        sector: form.sector,
+        description: form.description,
+      };
+      if (!financiallyLocked) {
+        body.target_amount_sol = parseFloat(form.target_amount_sol);
+        body.apr_percent = parseFloat(form.apr_percent);
+        body.duraction_months = parseInt(form.duraction_months, 10);
+      }
+      await howl<ApiResponse<unknown>>(`/admin/loans/${loan.id}`, {
+        method: "PATCH",
+        token,
+        body,
+      });
+
+      if (statusVal !== loan.status) {
+        await howl<ApiResponse<unknown>>(`/admin/loans/${loan.id}/status`, {
+          method: "PATCH",
+          token,
+          body: { status: statusVal },
+        });
+      }
+
+      toast.success("Loan updated.");
+      onSuccess();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Update failed.");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return (
+    <Dialog
+      open
+      onOpenChange={(o) => {
+        if (!o) onClose();
+      }}
+    >
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Edit Loan #{loan.id}</DialogTitle>
+        </DialogHeader>
+        <LoanFormFields
+          form={form}
+          onChange={setForm}
+          locked={financiallyLocked}
+        />
+        <div className="space-y-1.5">
+          <Label>Status</Label>
+          <Select
+            value={statusVal}
+            onValueChange={(v) => setStatusVal(v as LoanStatus)}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {(["active", "funded", "repaying", "closed"] as LoanStatus[]).map(
+                (s) => (
+                  <SelectItem key={s} value={s}>
+                    {s}
+                  </SelectItem>
+                ),
+              )}
+            </SelectContent>
+          </Select>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose} disabled={pending}>
+            Cancel
+          </Button>
+          <Button onClick={handleSubmit} disabled={pending}>
+            {pending ? "Saving…" : "Save Changes"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function DeleteDialog({
+  loan,
+  onClose,
+  onSuccess,
+}: {
+  loan: AdminLoan;
+  onClose: () => void;
+  onSuccess: () => void;
+}) {
+  const [cookies] = useCookies(["auth_token"]);
+  const token = cookies.auth_token as string | undefined;
+  const [pending, setPending] = useState(false);
+
+  async function handleDelete() {
+    if (!token) return;
+    setPending(true);
+    try {
+      await howl<ApiResponse<unknown>>(`/admin/loans/${loan.id}`, {
+        method: "DELETE",
+        token,
+      });
+      toast.success("Loan deleted.");
+      onSuccess();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Delete failed.");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return (
+    <AlertDialog
+      open
+      onOpenChange={(o) => {
+        if (!o) onClose();
+      }}
+    >
+      <AlertDialogContent size="sm">
+        <AlertDialogHeader>
+          <AlertDialogTitle>Delete Loan</AlertDialogTitle>
+          <AlertDialogDescription>
+            Delete{" "}
+            <span className="font-semibold text-foreground">{loan.title}</span>{" "}
+            ({loan.loan_number})? This cannot be undone.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={pending} onClick={onClose}>
+            Cancel
+          </AlertDialogCancel>
+          <AlertDialogAction
+            variant="destructive"
+            onClick={handleDelete}
+            disabled={pending}
+          >
+            {pending ? "Deleting…" : "Delete"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
+
+function lamportsToSol(lamports: number) {
+  return (lamports / 1_000_000_000).toFixed(2);
+}
+
+function fundedPercent(loan: AdminLoan) {
+  if (!loan.target_amount_lamports) return 0;
+  return Math.min(
+    100,
+    Math.round(
+      (loan.funded_amount_lamports / loan.target_amount_lamports) * 100,
+    ),
+  );
+}
+
+export default function LoansPage() {
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const [creating, setCreating] = useState(false);
+  const [editing, setEditing] = useState<AdminLoan | null>(null);
+  const [deleting, setDeleting] = useState<AdminLoan | null>(null);
+
+  const { data, isLoading, refetch } = useAdminLoans(page);
+
+  const loans = data?.data?.data ?? [];
+  const lastPage = data?.data?.last_page ?? 1;
+  const total = data?.data?.total ?? 0;
+
+  const filtered = search.trim()
+    ? loans.filter(
+        (l) =>
+          l.title.toLowerCase().includes(search.toLowerCase()) ||
+          l.loan_number.toLowerCase().includes(search.toLowerCase()),
+      )
+    : loans;
+
+  return (
+    <div className="p-6 space-y-6">
+      <div className="flex items-center gap-3 flex-wrap">
+        <h1 className="text-2xl font-semibold tracking-tight flex-1">Loans</h1>
         <Input
-          placeholder="Search loans...."
+          placeholder="Search title or loan number…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="flex-1 bg-background"
+          className="w-64 bg-background"
         />
-        <Button className="shrink-0" onClick={() => setCreateOpen(true)}>
-          New Loan
-        </Button>
+        <Button onClick={() => setCreating(true)}>New Loan</Button>
       </div>
 
       <Card className="shadow-none">
-        <CardContent className="p-6">
-          <h2 className="text-base font-semibold mb-4">All Loans</h2>
-          <div className="divide-y divide-border">
-            {filtered.map((loan) => (
-              <div
-                key={loan.id}
-                className="flex items-center justify-between py-3.5 first:pt-0 last:pb-0"
-              >
-                <div className="space-y-0.5 min-w-0">
-                  <p className="text-sm font-medium">{loan.title}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {loan.raised}/{loan.goal} {loan.unit} · {loan.rate}% ·{" "}
-                    {loan.term}mo
-                  </p>
-                </div>
-                <div className="flex items-center gap-2 shrink-0 ml-4">
-                  <span
-                    className={cn(
-                      "text-xs font-medium px-2.5 py-0.5 rounded-full border",
-                      statusStyles[loan.status],
-                    )}
+        <CardContent className="p-0">
+          {isLoading ? (
+            <div className="p-6 space-y-3">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="h-16 rounded bg-muted animate-pulse" />
+              ))}
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="p-10 text-center text-sm text-muted-foreground">
+              No loans found.
+            </div>
+          ) : (
+            <div className="divide-y divide-border">
+              {filtered.map((loan) => {
+                const pct = fundedPercent(loan);
+                return (
+                  <div
+                    key={loan.id}
+                    className="px-5 py-4 flex items-center justify-between gap-4"
                   >
-                    {loan.status}
-                  </span>
-                  <Button
-                    variant="outline"
-                    size="icon-sm"
-                    onClick={() => openEdit(loan)}
-                  >
-                    <Pencil className="size-3.5" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="icon-sm"
-                    onClick={() => setDeleteTarget(loan)}
-                  >
-                    <Trash2 className="size-3.5" />
-                  </Button>
-                </div>
-              </div>
-            ))}
-            {filtered.length === 0 && (
-              <p className="py-8 text-center text-sm text-muted-foreground">
-                No loans found.
-              </p>
-            )}
-          </div>
+                    <div className="min-w-0 flex-1 space-y-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-xs text-muted-foreground font-mono">
+                          {loan.loan_number}
+                        </span>
+                        <span className="text-sm font-semibold">
+                          {loan.title}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {loan.sector}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
+                        <span>
+                          {lamportsToSol(loan.funded_amount_lamports)} /{" "}
+                          {lamportsToSol(loan.target_amount_lamports)} SOL
+                        </span>
+                        <span>{loan.apr_percent}% APR</span>
+                        <span>{loan.duraction_months}mo</span>
+                        <span className="text-foreground font-medium">
+                          {pct}% funded
+                        </span>
+                      </div>
+                      <div className="w-full max-w-xs h-1.5 rounded-full bg-muted overflow-hidden">
+                        <div
+                          className="h-full bg-primary rounded-full"
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Badge
+                        className={`${statusBadge[loan.status] ?? ""} border-0 capitalize`}
+                      >
+                        {loan.status}
+                      </Badge>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setEditing(loan)}
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-destructive hover:text-destructive"
+                        onClick={() => setDeleting(loan)}
+                      >
+                        Delete
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      {/* Create Dialog */}
-      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-        <DialogContent className="sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Create New Loan</DialogTitle>
-          </DialogHeader>
-          <LoanFormFields form={createForm} onChange={setCreateForm} />
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setCreateOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleCreate}>Create Loan</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {!isLoading && total > 0 && (
+        <div className="flex items-center justify-between text-sm text-muted-foreground">
+          <span>
+            {total} loan{total !== 1 ? "s" : ""}
+          </span>
+          {lastPage > 1 && (
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    aria-disabled={page === 1}
+                    className={
+                      page === 1
+                        ? "pointer-events-none opacity-50"
+                        : "cursor-pointer"
+                    }
+                  />
+                </PaginationItem>
+                <PaginationItem>
+                  <span className="px-3 py-2">
+                    {page} / {lastPage}
+                  </span>
+                </PaginationItem>
+                <PaginationItem>
+                  <PaginationNext
+                    onClick={() => setPage((p) => Math.min(lastPage, p + 1))}
+                    aria-disabled={page === lastPage}
+                    className={
+                      page === lastPage
+                        ? "pointer-events-none opacity-50"
+                        : "cursor-pointer"
+                    }
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          )}
+        </div>
+      )}
 
-      {/* Edit Dialog */}
-      <Dialog
-        open={!!editTarget}
-        onOpenChange={(o) => !o && setEditTarget(null)}
-      >
-        <DialogContent className="sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Edit Loan</DialogTitle>
-          </DialogHeader>
-          <LoanFormFields
-            form={editForm}
-            onChange={setEditForm}
-            showStatus
-            status={editStatus}
-            onStatusChange={setEditStatus}
-          />
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditTarget(null)}>
-              Cancel
-            </Button>
-            <Button onClick={handleEdit}>Save Changes</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {creating && (
+        <CreateDialog
+          onClose={() => setCreating(false)}
+          onSuccess={() => {
+            setCreating(false);
+            refetch();
+          }}
+        />
+      )}
 
-      {/* Delete AlertDialog */}
-      <AlertDialog
-        open={!!deleteTarget}
-        onOpenChange={(o) => !o && setDeleteTarget(null)}
-      >
-        <AlertDialogContent size="sm">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Loan</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete{" "}
-              <span className="font-semibold text-foreground">
-                {deleteTarget?.title}
-              </span>
-              ? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction variant="destructive" onClick={handleDelete}>
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {editing && (
+        <EditDialog
+          loan={editing}
+          onClose={() => setEditing(null)}
+          onSuccess={() => {
+            setEditing(null);
+            refetch();
+          }}
+        />
+      )}
+
+      {deleting && (
+        <DeleteDialog
+          loan={deleting}
+          onClose={() => setDeleting(null)}
+          onSuccess={() => {
+            setDeleting(null);
+            void refetch();
+          }}
+        />
+      )}
     </div>
   );
 }
