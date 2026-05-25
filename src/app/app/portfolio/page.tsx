@@ -110,7 +110,7 @@ export default function PortfolioPage() {
             <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
               Invested balance
             </p>
-            <p className="text-lg font-bold mt-0.5">{stats.balance_sol} SOL</p>
+            <p className="text-lg font-bold mt-0.5">{stats.invested_balance_sol} SOL</p>
           </div>
         </div>
       )}

@@ -252,7 +252,7 @@ export interface HomeStats {
 }
 
 export interface InvestmentStats {
-  balance_sol: string;
+  invested_balance_sol: string;
   earning_sol: string;
   total_expected_interest_sol: string;
   active_loans_count: number;
