@@ -1,5 +1,6 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
   Bell,
@@ -15,9 +16,8 @@ import { useCookies } from "react-cookie";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useNotifications } from "@/hooks/use-notifications";
 import { howl } from "@/lib/utils";
-import type { Notification } from "@/types/notification";
 import type { ApiResponse } from "@/types/base";
-import { useQueryClient } from "@tanstack/react-query";
+import type { Notification } from "@/types/notification";
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleString(undefined, {
@@ -33,6 +33,11 @@ function notificationMeta(n: Notification): {
   variant: "default" | "destructive";
 } {
   const d = n.data;
+  const amount = d.amount_sol == null ? "Your" : `${d.amount_sol} SOL`;
+  const loanLabel =
+    d.loan_title || d.loan_number
+      ? `${d.loan_title ?? "Loan"}${d.loan_number ? ` (${d.loan_number})` : ""}`
+      : "this loan";
 
   if (d.type === "deposit_status") {
     const status = d.status ?? "";
@@ -66,6 +71,33 @@ function notificationMeta(n: Notification): {
       title: "Deposit Update",
       description: `Status: ${status}. Amount: ${d.amount_sol} SOL.`,
       icon: <Info className="h-4 w-4" />,
+      variant: "default",
+    };
+  }
+
+  if (d.type === "deposit_pending") {
+    return {
+      title: "Deposit Detected",
+      description: `${amount} deposit was detected and is awaiting confirmation.`,
+      icon: <Clock className="h-4 w-4 text-orange-400" />,
+      variant: "default",
+    };
+  }
+
+  if (d.type === "investment_created") {
+    return {
+      title: "Investment Created",
+      description: `${amount} investment in ${loanLabel} is now active.`,
+      icon: <CheckCircle2 className="h-4 w-4 text-green-500" />,
+      variant: "default",
+    };
+  }
+
+  if (d.type === "investment_refunded") {
+    return {
+      title: "Investment Refunded",
+      description: `${amount} investment in ${loanLabel} has been refunded.`,
+      icon: <Info className="h-4 w-4 text-blue-500" />,
       variant: "default",
     };
   }
