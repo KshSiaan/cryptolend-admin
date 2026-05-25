@@ -171,7 +171,7 @@ function ReviewDialog({
               { label: "User", value: `${req.user.name}` },
               { label: "Email", value: req.user.email },
               { label: "Amount", value: `${req.amount_sol} SOL` },
-              { label: "To", value: truncateAddr(req.recipient_address) },
+              { label: "To", value: req.recipient_address },
               { label: "Submitted", value: formatDate(req.created_at) },
               { label: "Status", value: req.status },
               ...(req.failure_reason
@@ -180,7 +180,7 @@ function ReviewDialog({
             ].map((r) => (
               <div key={r.label} className="flex justify-between px-3 py-2">
                 <span className="text-muted-foreground">{r.label}</span>
-                <span className="font-medium text-right max-w-[55%] break-all">
+                <span className="font-medium text-right max-w-[68%] break-all">
                   {r.value}
                 </span>
               </div>
