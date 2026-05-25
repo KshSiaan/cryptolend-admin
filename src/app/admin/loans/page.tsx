@@ -174,10 +174,21 @@ function CreateDialog({
   const [cookies] = useCookies(["auth_token"]);
   const token = cookies.auth_token as string | undefined;
   const [form, setForm] = useState<LoanFormState>(emptyForm);
+  const [fundingEndsAt, setFundingEndsAt] = useState("");
   const [pending, setPending] = useState(false);
+
+  function formatDateTimeForApi(value: string) {
+    const [datePart, timePart] = value.split("T");
+    if (!datePart || !timePart) return value;
+    return `${datePart} ${timePart.length === 5 ? `${timePart}:00` : timePart}`;
+  }
 
   async function handleSubmit() {
     if (!token || !form.title.trim()) return;
+    if (!fundingEndsAt) {
+      toast.error("Funding end date is required.");
+      return;
+    }
     setPending(true);
     try {
       await howl<ApiResponse<unknown>>("/admin/loans", {
@@ -190,6 +201,7 @@ function CreateDialog({
           target_amount_sol: parseFloat(form.target_amount_sol),
           apr_percent: parseFloat(form.apr_percent),
           duraction_months: parseInt(form.duraction_months, 10),
+          funding_ends_at: formatDateTimeForApi(fundingEndsAt),
         },
       });
       toast.success("Loan created.");
@@ -213,6 +225,14 @@ function CreateDialog({
           <DialogTitle>Create New Loan</DialogTitle>
         </DialogHeader>
         <LoanFormFields form={form} onChange={setForm} />
+        <div className="space-y-1.5">
+          <Label>Funding Ends At</Label>
+          <Input
+            type="datetime-local"
+            value={fundingEndsAt}
+            onChange={(e) => setFundingEndsAt(e.target.value)}
+          />
+        </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose} disabled={pending}>
             Cancel
@@ -251,7 +271,17 @@ function EditDialog({
   const [statusVal, setStatusVal] = useState<LoanStatus>(
     loan.status as LoanStatus,
   );
+  const [fundingEndsAt, setFundingEndsAt] = useState(() => {
+    if (!loan.funding_ends_at) return "";
+    return loan.funding_ends_at.replace(" ", "T").slice(0, 16);
+  });
   const [pending, setPending] = useState(false);
+
+  function formatDateTimeForApi(value: string) {
+    const [datePart, timePart] = value.split("T");
+    if (!datePart || !timePart) return value;
+    return `${datePart} ${timePart.length === 5 ? `${timePart}:00` : timePart}`;
+  }
 
   async function handleSubmit() {
     if (!token) return;
@@ -261,6 +291,7 @@ function EditDialog({
         title: form.title,
         sector: form.sector,
         description: form.description,
+        funding_ends_at: formatDateTimeForApi(fundingEndsAt),
       };
       if (!financiallyLocked) {
         body.target_amount_sol = parseFloat(form.target_amount_sol);
@@ -306,6 +337,14 @@ function EditDialog({
           onChange={setForm}
           locked={financiallyLocked}
         />
+        <div className="space-y-1.5">
+          <Label>Funding Ends At</Label>
+          <Input
+            type="datetime-local"
+            value={fundingEndsAt}
+            onChange={(e) => setFundingEndsAt(e.target.value)}
+          />
+        </div>
         <div className="space-y-1.5">
           <Label>Status</Label>
           <Select

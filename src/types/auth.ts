@@ -417,6 +417,7 @@ export interface AdminLoan {
   target_amount_lamports: number;
   funded_amount_lamports: number;
   duraction_months: number;
+  funding_ends_at?: string | null;
   status: string;
   created_by: number;
   created_at: string;
