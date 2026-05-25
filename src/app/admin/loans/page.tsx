@@ -455,6 +455,19 @@ function fundedPercent(loan: AdminLoan) {
   );
 }
 
+function formatFundingEndsAt(value?: string | null) {
+  if (!value) return "N/A";
+  const date = new Date(value.replace(" ", "T"));
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 export default function LoansPage() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
@@ -529,6 +542,9 @@ export default function LoansPage() {
                         </span>
                         <span>{loan.apr_percent}% APR</span>
                         <span>{loan.duraction_months}mo</span>
+                        <span>
+                          Funding ends: {formatFundingEndsAt(loan.funding_ends_at)}
+                        </span>
                         <span className="text-foreground font-medium">
                           {pct}% funded
                         </span>
