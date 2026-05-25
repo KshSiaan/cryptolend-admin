@@ -28,12 +28,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useAdminDeposits } from "@/hooks/use-admin-deposits";
+import {
+  type DepositStatus,
+  useAdminDeposits,
+} from "@/hooks/use-admin-deposits";
 import { howl } from "@/lib/utils";
 import type { AdminDeposit } from "@/types/auth";
 import type { ApiResponse } from "@/types/base";
-
-type DepositStatus = "pending" | "manual_review" | "confirmed" | "failed";
 
 const statusBadge: Record<string, string> = {
   pending: "bg-yellow-100 text-yellow-700",
@@ -41,6 +42,18 @@ const statusBadge: Record<string, string> = {
   confirmed: "bg-green-100 text-green-700",
   failed: "bg-red-100 text-red-700",
 };
+
+const depositStatuses: DepositStatus[] = [
+  "all",
+  "pending",
+  "manual_review",
+  "confirmed",
+  "failed",
+];
+
+function formatStatusLabel(status: string) {
+  return status.replace("_", " ");
+}
 
 function formatDate(iso: string | null) {
   if (!iso) return "—";
@@ -255,7 +268,7 @@ function ReviewDialog({
 }
 
 export default function DepositsPage() {
-  const [status, setStatus] = useState<DepositStatus>("pending");
+  const [status, setStatus] = useState<DepositStatus>("all");
   const [page, setPage] = useState(1);
   const [reviewing, setReviewing] = useState<AdminDeposit | null>(null);
 
@@ -279,10 +292,11 @@ export default function DepositsPage() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="pending">Pending</SelectItem>
-            <SelectItem value="manual_review">Manual Review</SelectItem>
-            <SelectItem value="confirmed">Confirmed</SelectItem>
-            <SelectItem value="failed">Failed</SelectItem>
+            {depositStatuses.map((s) => (
+              <SelectItem key={s} value={s}>
+                {formatStatusLabel(s)}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
@@ -297,7 +311,8 @@ export default function DepositsPage() {
             </div>
           ) : deposits.length === 0 ? (
             <div className="p-10 text-center text-sm text-muted-foreground">
-              No {status.replace("_", " ")} deposits.
+              No {status === "all" ? "" : `${formatStatusLabel(status)} `}
+              deposits.
             </div>
           ) : (
             <div className="divide-y divide-border">
@@ -328,7 +343,7 @@ export default function DepositsPage() {
                     <Badge
                       className={`${statusBadge[dep.status] ?? ""} border-0 capitalize`}
                     >
-                      {dep.status.replace("_", " ")}
+                      {formatStatusLabel(dep.status)}
                     </Badge>
                     <Button
                       size="sm"
