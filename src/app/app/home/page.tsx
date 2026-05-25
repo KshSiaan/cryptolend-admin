@@ -182,7 +182,7 @@ export default function HomePage() {
                     {tx.category}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {formatDate(tx.processed_at)}
+                    {formatDate(tx.created_at)}
                   </p>
                 </div>
                 <p
