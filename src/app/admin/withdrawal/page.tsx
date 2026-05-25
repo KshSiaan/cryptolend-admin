@@ -113,6 +113,23 @@ function ReviewDialog({
     }
   }
 
+  async function handleMarkAsPaid() {
+    if (!token) return;
+    setPending(true);
+    try {
+      await howl<ApiResponse<unknown>>(
+        `/admin/withdrawal-requests/${req.id}/mark-as-approved`,
+        { method: "POST", token },
+      );
+      toast.success("Withdrawal marked as paid.");
+      onSuccess();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Manual pay failed.");
+    } finally {
+      setPending(false);
+    }
+  }
+
   async function handleReject() {
     if (!token) return;
     if (!reason.trim()) {
@@ -186,23 +203,32 @@ function ReviewDialog({
                 />
               </div>
 
-              <div className="flex gap-2">
+              <div className="grid grid-cols-1 gap-2">
                 <Button
                   variant="outline"
-                  className="flex-1 gap-1.5 text-destructive hover:text-destructive border-destructive/30 hover:bg-destructive/5"
+                  className="w-full gap-1.5 text-destructive hover:text-destructive border-destructive/30 hover:bg-destructive/5"
                   onClick={handleReject}
                   disabled={pending}
                 >
-                  <X className="size-3.5" />
+                  <X className="size-3.5 shrink-0" />
                   Reject
                 </Button>
                 <Button
-                  className="flex-1 gap-1.5 bg-[oklch(0.52_0.165_145)] hover:bg-[oklch(0.47_0.165_145)] text-white"
+                  variant="outline"
+                  className="w-full gap-1.5"
+                  onClick={handleMarkAsPaid}
+                  disabled={pending}
+                >
+                  <Check className="size-3.5 shrink-0" />
+                  {pending ? "..." : "Mark as Paid (Manual Pay)"}
+                </Button>
+                <Button
+                  className="w-full gap-1.5 bg-[oklch(0.52_0.165_145)] hover:bg-[oklch(0.47_0.165_145)] text-white"
                   onClick={handleApprove}
                   disabled={pending}
                 >
-                  <Check className="size-3.5" />
-                  {pending ? "…" : "Approve"}
+                  <Check className="size-3.5 shrink-0" />
+                  {pending ? "…" : "Approve (Automatic Pay)"}
                 </Button>
               </div>
             </>
