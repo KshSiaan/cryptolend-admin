@@ -41,21 +41,37 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useAdminLoans } from "@/hooks/use-admin-loans";
+import { type AdminLoanStatus, useAdminLoans } from "@/hooks/use-admin-loans";
 import { howl } from "@/lib/utils";
 import type { AdminLoan } from "@/types/auth";
 import type { ApiResponse } from "@/types/base";
 
-type LoanStatus = "active" | "funded" | "repaying" | "closed";
+type LoanStatus = AdminLoanStatus;
+type EditableLoanStatus = Exclude<LoanStatus, "all">;
 
 const statusBadge: Record<string, string> = {
   active: "bg-green-100 text-green-700",
   funded: "bg-blue-100 text-blue-700",
+  funding_failed: "bg-red-100 text-red-700",
   repaying: "bg-yellow-100 text-yellow-700",
   closed: "bg-muted text-muted-foreground",
 };
 
+const editableLoanStatuses: EditableLoanStatus[] = [
+  "active",
+  "funded",
+  "funding_failed",
+  "repaying",
+  "closed",
+];
+
+const loanStatusFilters: LoanStatus[] = ["all", ...editableLoanStatuses];
+
 const SECTORS = ["Retail", "Agriculture", "Healthcare", "Manufacturing"];
+
+function formatStatusLabel(status: string) {
+  return status.replace("_", " ");
+}
 
 interface LoanFormState {
   title: string;
@@ -268,8 +284,8 @@ function EditDialog({
     apr_percent: loan.apr_percent,
     duraction_months: String(loan.duraction_months),
   });
-  const [statusVal, setStatusVal] = useState<LoanStatus>(
-    loan.status as LoanStatus,
+  const [statusVal, setStatusVal] = useState<EditableLoanStatus>(
+    loan.status as EditableLoanStatus,
   );
   const [fundingEndsAt, setFundingEndsAt] = useState(() => {
     if (!loan.funding_ends_at) return "";
@@ -349,19 +365,17 @@ function EditDialog({
           <Label>Status</Label>
           <Select
             value={statusVal}
-            onValueChange={(v) => setStatusVal(v as LoanStatus)}
+            onValueChange={(v) => setStatusVal(v as EditableLoanStatus)}
           >
             <SelectTrigger className="w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {(["active", "funded", "repaying", "closed"] as LoanStatus[]).map(
-                (s) => (
-                  <SelectItem key={s} value={s}>
-                    {s}
-                  </SelectItem>
-                ),
-              )}
+              {editableLoanStatuses.map((s) => (
+                <SelectItem key={s} value={s}>
+                  {formatStatusLabel(s)}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -469,13 +483,14 @@ function formatFundingEndsAt(value?: string | null) {
 }
 
 export default function LoansPage() {
+  const [status, setStatus] = useState<LoanStatus>("all");
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState<AdminLoan | null>(null);
   const [deleting, setDeleting] = useState<AdminLoan | null>(null);
 
-  const { data, isLoading, refetch } = useAdminLoans(page);
+  const { data, isLoading, refetch } = useAdminLoans(status, page);
 
   const loans = data?.data?.data ?? [];
   const lastPage = data?.data?.last_page ?? 1;
@@ -489,6 +504,11 @@ export default function LoansPage() {
       )
     : loans;
 
+  function handleStatusChange(v: string) {
+    setStatus(v as LoanStatus);
+    setPage(1);
+  }
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center gap-3 flex-wrap">
@@ -499,6 +519,18 @@ export default function LoansPage() {
           onChange={(e) => setSearch(e.target.value)}
           className="w-64 bg-background"
         />
+        <Select value={status} onValueChange={handleStatusChange}>
+          <SelectTrigger className="w-44">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {loanStatusFilters.map((s) => (
+              <SelectItem key={s} value={s}>
+                {formatStatusLabel(s)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <Button onClick={() => setCreating(true)}>New Loan</Button>
       </div>
 
@@ -512,7 +544,8 @@ export default function LoansPage() {
             </div>
           ) : filtered.length === 0 ? (
             <div className="p-10 text-center text-sm text-muted-foreground">
-              No loans found.
+              No {status === "all" ? "" : `${formatStatusLabel(status)} `}loans
+              found.
             </div>
           ) : (
             <div className="divide-y divide-border">
@@ -560,7 +593,7 @@ export default function LoansPage() {
                       <Badge
                         className={`${statusBadge[loan.status] ?? ""} border-0 capitalize`}
                       >
-                        {loan.status}
+                        {formatStatusLabel(loan.status)}
                       </Badge>
                       <Button
                         size="sm"
