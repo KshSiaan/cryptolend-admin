@@ -5,10 +5,11 @@ import Link from "next/link";
 
 import { DepositSheet } from "@/components/sheets/deposit-sheet";
 import { WithdrawSheet } from "@/components/sheets/withdraw-sheet";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useHomeStats } from "@/hooks/use-home-stats";
 import { useProfile } from "@/hooks/use-profile";
+import { useWalletStats } from "@/hooks/use-wallet-stats";
 import { cn } from "@/lib/utils";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 function getGreeting() {
   const h = new Date().getHours();
@@ -28,9 +29,11 @@ function formatDate(iso: string) {
 export default function HomePage() {
   const { data: profileData } = useProfile();
   const { data: statsData } = useHomeStats();
+  const { data: walletStatsData } = useWalletStats();
 
   const profile = profileData?.data;
   const stats = statsData?.data;
+  const walletStats = walletStatsData?.data;
 
   const firstName = profile?.name ? profile.name.split(" ")[0] : "";
   const initials = profile?.name
@@ -42,7 +45,7 @@ export default function HomePage() {
         .toUpperCase()
     : "";
 
-  const balanceSol = profile?.wallet_balance_sol ?? "0";
+  const balanceSol = walletStats?.available_sol ?? profile?.wallet_balance_sol ?? "0";
 
   return (
     <div className="py-6 space-y-6">
@@ -89,7 +92,7 @@ export default function HomePage() {
               Deposit
             </button>
           </DepositSheet>
-          <WithdrawSheet>
+          <WithdrawSheet availableSol={balanceSol}>
             <button
               type="button"
               className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-white/15 hover:bg-white/25 transition-colors px-4 py-2.5 text-sm font-medium text-background"
