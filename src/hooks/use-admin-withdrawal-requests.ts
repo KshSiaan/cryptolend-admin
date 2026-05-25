@@ -5,15 +5,29 @@ import { howl } from "@/lib/utils";
 import type { AdminWithdrawalRequest } from "@/types/auth";
 import type { ApiResponse, Paginator } from "@/types/base";
 
-export function useAdminWithdrawalRequests(page = 1) {
+export type AdminWithdrawalStatus =
+  | "all"
+  | "pending"
+  | "approved"
+  | "processing"
+  | "broadcasted"
+  | "confirmed"
+  | "failed"
+  | "rejected"
+  | "cancelled";
+
+export function useAdminWithdrawalRequests(
+  status: AdminWithdrawalStatus,
+  page = 1,
+) {
   const [cookies] = useCookies(["auth_token"]);
   const token = cookies.auth_token as string | undefined;
 
   return useQuery({
-    queryKey: ["admin-withdrawal-requests", page],
+    queryKey: ["admin-withdrawal-requests", status, page],
     queryFn: () =>
       howl<ApiResponse<Paginator<AdminWithdrawalRequest[]>>>(
-        `/admin/withdrawal-requests?page=${page}`,
+        `/admin/withdrawal-requests?status=${status}&page=${page}`,
         { token },
       ),
     enabled: !!token,
