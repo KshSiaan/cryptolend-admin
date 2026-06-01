@@ -86,8 +86,9 @@ export default function WalletPage() {
               <p className="text-2xl font-bold mt-1">
                 {stats ? parseFloat(stats.available_sol).toFixed(4) : "—"}
               </p>
-              <p className="text-xs text-muted-foreground">
-                ≈ {stats?.available_eur ?? "—"} EUR
+              <p className="text-xs text-muted-foreground">SOL</p>
+              <p className="text-sm font-semibold text-muted-foreground">
+                {stats?.available_eur ?? "—"} €
               </p>
             </>
           )}
@@ -103,8 +104,9 @@ export default function WalletPage() {
               <p className="text-2xl font-bold mt-1">
                 {stats ? parseFloat(stats.invested_sol).toFixed(4) : "—"}
               </p>
-              <p className="text-xs text-muted-foreground">
-                ≈ {stats?.invested_eur ?? "—"} EUR
+              <p className="text-xs text-muted-foreground">SOL</p>
+              <p className="text-sm font-semibold text-muted-foreground">
+                {stats?.invested_eur ?? "—"} €
               </p>
             </>
           )}
@@ -156,9 +158,14 @@ export default function WalletPage() {
             {withdrawals.map((w) => (
               <div key={w.id} className="px-4 py-3.5 space-y-1">
                 <div className="flex items-center justify-between">
-                  <p className="text-base font-bold">
-                    {parseFloat(w.amount_sol).toFixed(4)} SOL
-                  </p>
+                  <div>
+                    <p className="text-base font-bold">
+                      {parseFloat(w.amount_sol).toFixed(4)} SOL
+                    </p>
+                    <p className="text-sm font-semibold text-muted-foreground">
+                      {w.amount_eur} €
+                    </p>
+                  </div>
                   <span
                     className={cn(
                       "rounded-full text-xs px-2.5 py-0.5 font-medium flex items-center gap-1",
@@ -216,7 +223,7 @@ export default function WalletPage() {
                       {formatDate(tx.created_at)}
                     </p>
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex items-center gap-2 shrink-0 flex-col items-end">
                     <span
                       className={cn(
                         "rounded-full text-xs px-2 py-0.5 font-medium capitalize",
@@ -226,17 +233,23 @@ export default function WalletPage() {
                     >
                       {tx.status}
                     </span>
-                    <p
-                      className={cn(
-                        "text-sm font-semibold w-24 text-right",
-                        tx.direction === "credit"
-                          ? "text-green-pos"
-                          : "text-destructive",
-                      )}
-                    >
-                      {tx.direction === "credit" ? "+" : "−"}
-                      {tx.amount_sol} SOL
-                    </p>
+                    <div className="text-right space-y-0.5">
+                      <p
+                        className={cn(
+                          "text-sm font-semibold",
+                          tx.direction === "credit"
+                            ? "text-green-pos"
+                            : "text-destructive",
+                        )}
+                      >
+                        {tx.direction === "credit" ? "+" : "−"}
+                        {tx.amount_sol} SOL
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {tx.direction === "credit" ? "+" : "−"}
+                        {tx.amount_eur} €
+                      </p>
+                    </div>
                   </div>
                 </div>
               ))}

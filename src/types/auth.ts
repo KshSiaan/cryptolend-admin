@@ -68,6 +68,7 @@ export interface ProfileData {
   status: string;
   wallet_balance_lamports: number;
   wallet_balance_sol: string;
+  wallet_balance_eur: string;
 }
 
 export interface ChangePasswordBody {
@@ -157,8 +158,11 @@ export interface WalletTransaction {
   transaction_label: string;
   status: string;
   amount_sol: string;
+  amount_eur: string;
   balance_before_sol: string;
+  balance_before_eur: string;
   balance_after_sol: string;
+  balance_after_eur: string;
   tx_signature: string | null;
   processed_at: string | null;
   created_at: string;
@@ -170,6 +174,8 @@ export interface WithdrawalRequest {
   status: string;
   amount_lamports: number;
   amount_sol: string;
+  amount_eur: string;
+
   recipient_address: string;
   note: string;
   wallet_transaction_id: number;
@@ -186,6 +192,7 @@ export interface RecentTransaction {
   category: string;
   status: string;
   amount_sol: string;
+  amount_eur: string;
   processed_at: string;
   created_at: string;
 }
@@ -193,6 +200,7 @@ export interface RecentTransaction {
 export interface RecentInvestment {
   id: number;
   amount_sol: string;
+  amount_eur: string;
   status: string;
   created_at: string;
 }
@@ -209,6 +217,9 @@ export interface LoanItem {
   apr_percent: number;
   target_amount_sol: string;
   raised_amount_sol: string;
+  target_amount_eur: string;
+  
+  raised_amount_eur: string;
   funded_percent: number;
   funded_percent_label: string;
   target_amount_lamports?: number;
@@ -239,22 +250,29 @@ export interface InvestResponseData {
   wallet: {
     balance_lamports: number;
     balance_sol: string;
+    balance_eur: string;
     frozen_balance_lamports: number;
     frozen_balance_sol: string;
+    frozen_balance_eur: string;
   };
 }
 
 export interface HomeStats {
   total_invested_sol: string;
   total_earnings_sol: string;
+  total_invested_eur: string;
+  total_earning_eur: string;
   recent_investments: RecentInvestment[];
   recent_transactions: RecentTransaction[];
 }
 
 export interface InvestmentStats {
   invested_balance_sol: string;
+  invested_balance_eur: string;
   earning_sol: string;
+  earning_eur: string;
   total_expected_interest_sol: string;
+  total_expected_interest_eur: string;
   active_loans_count: number;
 }
 
@@ -265,7 +283,9 @@ export interface ReturnSchedule {
   due_date: string;
   status: "paid" | "due" | "upcoming";
   total_due_sol: string;
+  total_due_eur: string;
   paid_sol: string;
+  paid_eur: string;
   paid_at: string | null;
 }
 
@@ -273,8 +293,11 @@ export interface ActiveInvestment {
   id: number;
   status: string;
   amount_sol: string;
+  amount_eur: string;
   expected_return_sol: string;
+  expected_return_eur: string;
   received_sol: string;
+  received_eur: string;
   apr_percent: number;
   created_at: string;
   loan: {
@@ -292,13 +315,16 @@ export interface ActiveInvestment {
     due_count: number;
     upcoming_count: number;
     due_amount_sol: string;
+    due_amount_eur: string;
   };
 }
 
+  
 export interface EarningsHistoryEntry {
   month: string;
   month_key: string;
   amount_sol: string;
+  amount_eur: string;
 }
 
 export interface AdminTransaction {
@@ -389,6 +415,8 @@ export interface ActiveLoan {
   investors_count: number;
   target_amount_sol: string;
   raised_amount_sol: string;
+    target_amount_eur: string;
+  raised_amount_eur: string;
   funded_percent: number;
 }
 
