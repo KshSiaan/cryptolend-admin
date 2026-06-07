@@ -60,7 +60,9 @@ export default function HomePage() {
             <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
               Balance
             </p>
-            <p className="text-sm font-bold">{balanceSol} SOL</p>
+            <p className="text-sm font-bold">
+              {parseFloat(balanceSol).toFixed(2) || 0} SOL
+            </p>
           </div>
           <Avatar className="w-10 h-10">
             <AvatarImage src={profile?.profile_photo_url ?? ""} />
@@ -76,7 +78,8 @@ export default function HomePage() {
             Available Balance
           </p>
           <p className="text-4xl font-bold mt-1">
-            {balanceSol} <span className="text-xl font-semibold">SOL</span>
+            {parseFloat(balanceSol).toFixed(6) || 0}{" "}
+            <span className="text-xl font-semibold">SOL</span>
           </p>
         </div>
         <div className="grid grid-cols-2 gap-3">
@@ -115,7 +118,7 @@ export default function HomePage() {
             Invested
           </p>
           <p className="text-2xl font-bold mt-1">
-            {stats?.total_invested_sol ?? "0"}
+            {parseFloat(stats?.total_invested_sol || "0").toFixed(2) || 0} SOL
           </p>
           <p className="text-xs text-muted-foreground">SOL</p>
         </div>
@@ -124,7 +127,7 @@ export default function HomePage() {
             Earnings
           </p>
           <p className="text-2xl font-bold mt-1 text-green-pos">
-            {stats?.total_earnings_sol ?? "0"}
+            {parseFloat(stats?.total_earnings_sol || "0").toFixed(2) || 0} SOL
           </p>
           <p className="text-xs text-muted-foreground">SOL</p>
         </div>
