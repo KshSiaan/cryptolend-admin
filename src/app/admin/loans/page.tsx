@@ -41,21 +41,37 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useAdminLoans } from "@/hooks/use-admin-loans";
+import { type AdminLoanStatus, useAdminLoans } from "@/hooks/use-admin-loans";
 import { howl } from "@/lib/utils";
 import type { AdminLoan } from "@/types/auth";
 import type { ApiResponse } from "@/types/base";
 
-type LoanStatus = "active" | "funded" | "repaying" | "closed";
+type LoanStatus = AdminLoanStatus;
+type EditableLoanStatus = Exclude<LoanStatus, "all">;
 
 const statusBadge: Record<string, string> = {
   active: "bg-green-100 text-green-700",
   funded: "bg-blue-100 text-blue-700",
+  funding_failed: "bg-red-100 text-red-700",
   repaying: "bg-yellow-100 text-yellow-700",
   closed: "bg-muted text-muted-foreground",
 };
 
+const editableLoanStatuses: EditableLoanStatus[] = [
+  "active",
+  "funded",
+  "funding_failed",
+  "repaying",
+  "closed",
+];
+
+const loanStatusFilters: LoanStatus[] = ["all", ...editableLoanStatuses];
+
 const SECTORS = ["Retail", "Agriculture", "Healthcare", "Manufacturing"];
+
+function formatStatusLabel(status: string) {
+  return status.replace("_", " ");
+}
 
 interface LoanFormState {
   title: string;
@@ -174,10 +190,21 @@ function CreateDialog({
   const [cookies] = useCookies(["auth_token"]);
   const token = cookies.auth_token as string | undefined;
   const [form, setForm] = useState<LoanFormState>(emptyForm);
+  const [fundingEndsAt, setFundingEndsAt] = useState("");
   const [pending, setPending] = useState(false);
+
+  function formatDateTimeForApi(value: string) {
+    const [datePart, timePart] = value.split("T");
+    if (!datePart || !timePart) return value;
+    return `${datePart} ${timePart.length === 5 ? `${timePart}:00` : timePart}`;
+  }
 
   async function handleSubmit() {
     if (!token || !form.title.trim()) return;
+    if (!fundingEndsAt) {
+      toast.error("Funding end date is required.");
+      return;
+    }
     setPending(true);
     try {
       await howl<ApiResponse<unknown>>("/admin/loans", {
@@ -190,6 +217,7 @@ function CreateDialog({
           target_amount_sol: parseFloat(form.target_amount_sol),
           apr_percent: parseFloat(form.apr_percent),
           duraction_months: parseInt(form.duraction_months, 10),
+          funding_ends_at: formatDateTimeForApi(fundingEndsAt),
         },
       });
       toast.success("Loan created.");
@@ -213,6 +241,14 @@ function CreateDialog({
           <DialogTitle>Create New Loan</DialogTitle>
         </DialogHeader>
         <LoanFormFields form={form} onChange={setForm} />
+        <div className="space-y-1.5">
+          <Label>Funding Ends At</Label>
+          <Input
+            type="datetime-local"
+            value={fundingEndsAt}
+            onChange={(e) => setFundingEndsAt(e.target.value)}
+          />
+        </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose} disabled={pending}>
             Cancel
@@ -248,10 +284,20 @@ function EditDialog({
     apr_percent: loan.apr_percent,
     duraction_months: String(loan.duraction_months),
   });
-  const [statusVal, setStatusVal] = useState<LoanStatus>(
-    loan.status as LoanStatus,
+  const [statusVal, setStatusVal] = useState<EditableLoanStatus>(
+    loan.status as EditableLoanStatus,
   );
+  const [fundingEndsAt, setFundingEndsAt] = useState(() => {
+    if (!loan.funding_ends_at) return "";
+    return loan.funding_ends_at.replace(" ", "T").slice(0, 16);
+  });
   const [pending, setPending] = useState(false);
+
+  function formatDateTimeForApi(value: string) {
+    const [datePart, timePart] = value.split("T");
+    if (!datePart || !timePart) return value;
+    return `${datePart} ${timePart.length === 5 ? `${timePart}:00` : timePart}`;
+  }
 
   async function handleSubmit() {
     if (!token) return;
@@ -261,6 +307,7 @@ function EditDialog({
         title: form.title,
         sector: form.sector,
         description: form.description,
+        funding_ends_at: formatDateTimeForApi(fundingEndsAt),
       };
       if (!financiallyLocked) {
         body.target_amount_sol = parseFloat(form.target_amount_sol);
@@ -307,22 +354,28 @@ function EditDialog({
           locked={financiallyLocked}
         />
         <div className="space-y-1.5">
+          <Label>Funding Ends At</Label>
+          <Input
+            type="datetime-local"
+            value={fundingEndsAt}
+            onChange={(e) => setFundingEndsAt(e.target.value)}
+          />
+        </div>
+        <div className="space-y-1.5">
           <Label>Status</Label>
           <Select
             value={statusVal}
-            onValueChange={(v) => setStatusVal(v as LoanStatus)}
+            onValueChange={(v) => setStatusVal(v as EditableLoanStatus)}
           >
             <SelectTrigger className="w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {(["active", "funded", "repaying", "closed"] as LoanStatus[]).map(
-                (s) => (
-                  <SelectItem key={s} value={s}>
-                    {s}
-                  </SelectItem>
-                ),
-              )}
+              {editableLoanStatuses.map((s) => (
+                <SelectItem key={s} value={s}>
+                  {formatStatusLabel(s)}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -416,14 +469,28 @@ function fundedPercent(loan: AdminLoan) {
   );
 }
 
+function formatFundingEndsAt(value?: string | null) {
+  if (!value) return "N/A";
+  const date = new Date(value.replace(" ", "T"));
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 export default function LoansPage() {
+  const [status, setStatus] = useState<LoanStatus>("all");
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState<AdminLoan | null>(null);
   const [deleting, setDeleting] = useState<AdminLoan | null>(null);
 
-  const { data, isLoading, refetch } = useAdminLoans(page);
+  const { data, isLoading, refetch } = useAdminLoans(status, page);
 
   const loans = data?.data?.data ?? [];
   const lastPage = data?.data?.last_page ?? 1;
@@ -437,6 +504,11 @@ export default function LoansPage() {
       )
     : loans;
 
+  function handleStatusChange(v: string) {
+    setStatus(v as LoanStatus);
+    setPage(1);
+  }
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center gap-3 flex-wrap">
@@ -447,6 +519,18 @@ export default function LoansPage() {
           onChange={(e) => setSearch(e.target.value)}
           className="w-64 bg-background"
         />
+        <Select value={status} onValueChange={handleStatusChange}>
+          <SelectTrigger className="w-44">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {loanStatusFilters.map((s) => (
+              <SelectItem key={s} value={s}>
+                {formatStatusLabel(s)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <Button onClick={() => setCreating(true)}>New Loan</Button>
       </div>
 
@@ -460,7 +544,8 @@ export default function LoansPage() {
             </div>
           ) : filtered.length === 0 ? (
             <div className="p-10 text-center text-sm text-muted-foreground">
-              No loans found.
+              No {status === "all" ? "" : `${formatStatusLabel(status)} `}loans
+              found.
             </div>
           ) : (
             <div className="divide-y divide-border">
@@ -490,6 +575,9 @@ export default function LoansPage() {
                         </span>
                         <span>{loan.apr_percent}% APR</span>
                         <span>{loan.duraction_months}mo</span>
+                        <span>
+                          Funding ends: {formatFundingEndsAt(loan.funding_ends_at)}
+                        </span>
                         <span className="text-foreground font-medium">
                           {pct}% funded
                         </span>
@@ -505,7 +593,7 @@ export default function LoansPage() {
                       <Badge
                         className={`${statusBadge[loan.status] ?? ""} border-0 capitalize`}
                       >
-                        {loan.status}
+                        {formatStatusLabel(loan.status)}
                       </Badge>
                       <Button
                         size="sm"

@@ -66,6 +66,9 @@ export default function PortfolioPage() {
             <p className="text-sm font-bold">
               {profile?.wallet_balance_sol ?? "0"} SOL
             </p>
+            <p className="text-sm font-bold">
+              {profile?.wallet_balance_eur ?? "0"} €
+            </p>
           </div>
           <div className="w-9 h-9 rounded-full bg-foreground text-background flex items-center justify-center text-xs font-bold">
             {initials}
@@ -83,6 +86,9 @@ export default function PortfolioPage() {
             {stats?.earning_sol ?? "0"}
           </p>
           <p className="text-xs text-muted-foreground">SOL total</p>
+          <p className="text-sm font-semibold mt-1 text-muted-foreground">
+            {stats?.earning_eur ?? "0"} €
+          </p>
         </div>
         <div className="rounded-2xl bg-card border border-border p-4">
           <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
@@ -105,12 +111,20 @@ export default function PortfolioPage() {
             <p className="text-lg font-bold text-green-pos mt-0.5">
               +{stats.total_expected_interest_sol} SOL
             </p>
+            <p className="text-sm font-semibold text-muted-foreground">
+              +{stats.total_expected_interest_eur} €
+            </p>
           </div>
           <div className="text-right">
             <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
               Invested balance
             </p>
-            <p className="text-lg font-bold mt-0.5">{stats.balance_sol} SOL</p>
+            <p className="text-lg font-bold mt-0.5">
+              {stats.invested_balance_sol} SOL
+            </p>
+            <p className="text-sm font-semibold text-muted-foreground">
+              {stats.invested_balance_eur} €
+            </p>
           </div>
         </div>
       )}
@@ -165,6 +179,9 @@ export default function PortfolioPage() {
                           +{inv.expected_return_sol}
                         </p>
                         <p className="text-[9px] text-muted-foreground">SOL</p>
+                        <p className="text-sm font-semibold text-muted-foreground">
+                          +{inv.expected_return_eur} €
+                        </p>
                       </div>
                     </div>
 
@@ -182,26 +199,31 @@ export default function PortfolioPage() {
                         {
                           label: "INVESTED",
                           value: `${inv.amount_sol}`,
+                          subValue: `${inv.amount_eur}`,
                           className: "",
                         },
                         {
                           label: "APR",
                           value: `${inv.apr_percent}%`,
+                          subValue: undefined,
                           className: "",
                         },
                         {
                           label: "TERM",
                           value: `${inv.loan.duraction_months} mo`,
+                          subValue: undefined,
                           className: "",
                         },
                         {
                           label: "RECEIVED",
                           value: `+${inv.received_sol}`,
+                          subValue: `+${inv.received_eur}`,
                           className: "text-green-pos",
                         },
                         {
                           label: "REMAINING",
                           value: `${(parseFloat(inv.expected_return_sol) - parseFloat(inv.received_sol)).toFixed(6)}`,
+                          subValue: `${(parseFloat(inv.expected_return_eur) - parseFloat(inv.received_eur)).toFixed(2)}`,
                           className: "",
                         },
                       ].map((s) => (
@@ -214,6 +236,11 @@ export default function PortfolioPage() {
                           >
                             {s.value}
                           </span>
+                          {s.subValue !== undefined && (
+                            <span className="text-[10px] text-muted-foreground tabular-nums">
+                              {s.subValue} €
+                            </span>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -227,7 +254,7 @@ export default function PortfolioPage() {
                         {inv.return_schedules.map((s) => (
                           <span
                             key={s.id}
-                            title={`${s.month_label} · ${s.total_due_sol} SOL · ${s.due_date}`}
+                            title={`${s.month_label} · ${s.total_due_sol} SOL · ${s.total_due_eur} € · ${s.due_date}`}
                             className={[
                               "rounded-lg px-2.5 py-1.5 text-[11px] font-semibold",
                               s.status === "paid"
@@ -249,7 +276,8 @@ export default function PortfolioPage() {
                         {dueSchedule && (
                           <span className="flex items-center gap-1">
                             <span className="w-2 h-2 rounded-full bg-amber-400 inline-block" />
-                            Due · +{dueSchedule.total_due_sol} SOL
+                            Due · +{dueSchedule.total_due_sol} SOL |{" "}
+                            {dueSchedule.total_due_eur}€
                           </span>
                         )}
                         <span className="flex items-center gap-1">
@@ -321,9 +349,14 @@ export default function PortfolioPage() {
                   className="flex items-center justify-between px-4 py-3.5"
                 >
                   <p className="text-sm font-medium">{entry.month}</p>
-                  <p className="text-sm font-semibold text-green-pos">
-                    +{entry.amount_sol} SOL
-                  </p>
+                  <div className="text-right">
+                    <p className="text-sm font-semibold text-green-pos">
+                      +{entry.amount_sol} SOL
+                    </p>
+                    <p className="text-sm font-semibold text-muted-foreground">
+                      +{entry.amount_eur} €
+                    </p>
+                  </div>
                 </div>
               ))}
             </div>
@@ -417,11 +450,17 @@ export default function PortfolioPage() {
                       <span className="font-bold">
                         {loan.target_amount_sol} SOL
                       </span>
+                      <span className="block text-xs text-muted-foreground">
+                        {loan.target_amount_eur} €
+                      </span>
                     </span>
                     <span>
                       Raised{" "}
                       <span className="font-bold">
                         {loan.raised_amount_sol} SOL
+                      </span>
+                      <span className="block text-xs text-muted-foreground">
+                        {loan.raised_amount_eur} €
                       </span>
                     </span>
                     <span className="text-green-pos font-bold">

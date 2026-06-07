@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
-
 import { Check, Eye, X } from "lucide-react";
+import { useState } from "react";
 import { useCookies } from "react-cookie";
 import { toast } from "sonner";
 
@@ -22,7 +21,17 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { useAdminWithdrawalRequests } from "@/hooks/use-admin-withdrawal-requests";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  type AdminWithdrawalStatus,
+  useAdminWithdrawalRequests,
+} from "@/hooks/use-admin-withdrawal-requests";
 import { howl } from "@/lib/utils";
 import type { AdminWithdrawalRequest } from "@/types/auth";
 import type { ApiResponse } from "@/types/base";
@@ -31,9 +40,29 @@ const statusBadge: Record<string, string> = {
   pending: "bg-yellow-100 text-yellow-700",
   approved: "bg-blue-100 text-blue-700",
   processing: "bg-blue-100 text-blue-700",
+  broadcasted: "bg-indigo-100 text-indigo-700",
+  confirmed: "bg-green-100 text-green-700",
+  failed: "bg-red-100 text-red-600",
   rejected: "bg-red-100 text-red-600",
+  cancelled: "bg-muted text-muted-foreground",
   completed: "bg-green-100 text-green-700",
 };
+
+const withdrawalStatuses: AdminWithdrawalStatus[] = [
+  "all",
+  "pending",
+  "approved",
+  "processing",
+  "broadcasted",
+  "confirmed",
+  "failed",
+  "rejected",
+  "cancelled",
+];
+
+function formatStatusLabel(status: string) {
+  return status.replace("_", " ");
+}
 
 function formatDate(iso: string | null) {
   if (!iso) return "—";
@@ -84,6 +113,23 @@ function ReviewDialog({
     }
   }
 
+  async function handleMarkAsPaid() {
+    if (!token) return;
+    setPending(true);
+    try {
+      await howl<ApiResponse<unknown>>(
+        `/admin/withdrawal-requests/${req.id}/mark-as-approved`,
+        { method: "POST", token },
+      );
+      toast.success("Withdrawal marked as paid.");
+      onSuccess();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Manual pay failed.");
+    } finally {
+      setPending(false);
+    }
+  }
+
   async function handleReject() {
     if (!token) return;
     if (!reason.trim()) {
@@ -125,7 +171,7 @@ function ReviewDialog({
               { label: "User", value: `${req.user.name}` },
               { label: "Email", value: req.user.email },
               { label: "Amount", value: `${req.amount_sol} SOL` },
-              { label: "To", value: truncateAddr(req.recipient_address) },
+              { label: "To", value: req.recipient_address },
               { label: "Submitted", value: formatDate(req.created_at) },
               { label: "Status", value: req.status },
               ...(req.failure_reason
@@ -134,7 +180,7 @@ function ReviewDialog({
             ].map((r) => (
               <div key={r.label} className="flex justify-between px-3 py-2">
                 <span className="text-muted-foreground">{r.label}</span>
-                <span className="font-medium text-right max-w-[55%] break-all">
+                <span className="font-medium text-right max-w-[68%] break-all">
                   {r.value}
                 </span>
               </div>
@@ -157,23 +203,32 @@ function ReviewDialog({
                 />
               </div>
 
-              <div className="flex gap-2">
+              <div className="grid grid-cols-1 gap-2">
                 <Button
                   variant="outline"
-                  className="flex-1 gap-1.5 text-destructive hover:text-destructive border-destructive/30 hover:bg-destructive/5"
+                  className="w-full gap-1.5 text-destructive hover:text-destructive border-destructive/30 hover:bg-destructive/5"
                   onClick={handleReject}
                   disabled={pending}
                 >
-                  <X className="size-3.5" />
+                  <X className="size-3.5 shrink-0" />
                   Reject
                 </Button>
                 <Button
-                  className="flex-1 gap-1.5 bg-[oklch(0.52_0.165_145)] hover:bg-[oklch(0.47_0.165_145)] text-white"
+                  variant="outline"
+                  className="w-full gap-1.5"
+                  onClick={handleMarkAsPaid}
+                  disabled={pending}
+                >
+                  <Check className="size-3.5 shrink-0" />
+                  {pending ? "..." : "Mark as Paid (Manual Pay)"}
+                </Button>
+                <Button
+                  className="w-full gap-1.5 bg-[oklch(0.52_0.165_145)] hover:bg-[oklch(0.47_0.165_145)] text-white"
                   onClick={handleApprove}
                   disabled={pending}
                 >
-                  <Check className="size-3.5" />
-                  {pending ? "…" : "Approve"}
+                  <Check className="size-3.5 shrink-0" />
+                  {pending ? "…" : "Approve (Automatic Pay)"}
                 </Button>
               </div>
             </>
@@ -191,20 +246,40 @@ function ReviewDialog({
 }
 
 export default function WithdrawalPage() {
+  const [status, setStatus] = useState<AdminWithdrawalStatus>("all");
   const [page, setPage] = useState(1);
   const [reviewing, setReviewing] = useState<AdminWithdrawalRequest | null>(
     null,
   );
 
-  const { data, isLoading, refetch } = useAdminWithdrawalRequests(page);
+  const { data, isLoading, refetch } = useAdminWithdrawalRequests(status, page);
 
   const requests = data?.data?.data ?? [];
   const lastPage = data?.data?.last_page ?? 1;
   const total = data?.data?.total ?? 0;
 
+  function handleStatusChange(v: string) {
+    setStatus(v as AdminWithdrawalStatus);
+    setPage(1);
+  }
+
   return (
     <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-semibold tracking-tight">Withdrawals</h1>
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <h1 className="text-2xl font-semibold tracking-tight">Withdrawals</h1>
+        <Select value={status} onValueChange={handleStatusChange}>
+          <SelectTrigger className="w-44">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {withdrawalStatuses.map((s) => (
+              <SelectItem key={s} value={s}>
+                {formatStatusLabel(s)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
       <Card className="shadow-none">
         <CardContent className="p-0">
@@ -216,7 +291,8 @@ export default function WithdrawalPage() {
             </div>
           ) : requests.length === 0 ? (
             <div className="p-10 text-center text-sm text-muted-foreground">
-              No withdrawal requests.
+              No {status === "all" ? "" : `${formatStatusLabel(status)} `}
+              withdrawal requests.
             </div>
           ) : (
             <div className="divide-y divide-border">
@@ -255,7 +331,7 @@ export default function WithdrawalPage() {
                     <Badge
                       className={`${statusBadge[req.status] ?? "bg-muted text-muted-foreground"} border-0 capitalize`}
                     >
-                      {req.status}
+                      {formatStatusLabel(req.status)}
                     </Badge>
                     <Button
                       size="sm"

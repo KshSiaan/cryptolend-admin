@@ -5,7 +5,12 @@ import { howl } from "@/lib/utils";
 import type { AdminDeposit } from "@/types/auth";
 import type { ApiResponse, Paginator } from "@/types/base";
 
-type DepositStatus = "pending" | "manual_review" | "confirmed" | "failed";
+export type DepositStatus =
+  | "all"
+  | "pending"
+  | "manual_review"
+  | "confirmed"
+  | "failed";
 
 export function useAdminDeposits(status: DepositStatus, page = 1) {
   const [cookies] = useCookies(["auth_token"]);

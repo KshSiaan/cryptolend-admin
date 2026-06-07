@@ -45,13 +45,43 @@ export function LoanDetailSheet({
 
         <div className="rounded-2xl bg-card border border-border divide-y divide-border mb-6">
           {[
-            { label: "Loan number", value: loan.loan_number, green: false, badge: false },
+            {
+              label: "Loan number",
+              value: loan.loan_number,
+              green: false,
+              badge: false,
+            },
             { label: "Sector", value: loan.sector, green: false, badge: false },
-            { label: "Target", value: `${loan.target_amount_sol} SOL`, green: false, badge: false },
-            { label: "Raised", value: `${loan.raised_amount_sol} SOL (${loan.funded_percent}%)`, green: false, badge: false },
-            { label: "APR", value: `${loan.apr_percent}%`, green: true, badge: false },
-            { label: "Duration", value: `${loan.duration_months} months`, green: false, badge: false },
-            { label: "Investors", value: `${loan.investors_count}`, green: false, badge: false },
+            {
+              label: "Target",
+              value: `${loan.target_amount_sol} SOL | ${loan.target_amount_eur} EUR`,
+              green: false,
+              badge: false,
+            },
+            {
+              label: "Raised",
+              value: `${loan.raised_amount_sol} SOL | ${loan.raised_amount_eur} EUR (${loan.funded_percent}%)`,
+              green: false,
+              badge: false,
+            },
+            {
+              label: "APR",
+              value: `${loan.apr_percent}%`,
+              green: true,
+              badge: false,
+            },
+            {
+              label: "Duration",
+              value: `${loan.duration_months} months`,
+              green: false,
+              badge: false,
+            },
+            {
+              label: "Investors",
+              value: `${loan.investors_count}`,
+              green: false,
+              badge: false,
+            },
             { label: "Status", value: loan.status, green: false, badge: true },
           ].map((r) => (
             <div
@@ -69,7 +99,12 @@ export function LoanDetailSheet({
                   {loan.status}
                 </span>
               ) : (
-                <span className={cn("font-semibold", r.green ? "text-green-pos" : "")}>
+                <span
+                  className={cn(
+                    "font-semibold",
+                    r.green ? "text-green-pos" : "",
+                  )}
+                >
                   {r.value}
                 </span>
               )}
