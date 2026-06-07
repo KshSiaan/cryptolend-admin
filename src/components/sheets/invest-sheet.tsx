@@ -74,6 +74,48 @@ export function InvestSheet({
     return () => clearTimeout(timer);
   }, [eurAmount, currency, token]);
 
+  async function handleCurrencySwitch() {
+    const next = currency === "SOL" ? "EUR" : "SOL";
+    setEurToSol(null);
+
+    if (next === "EUR" && solAmount && Number(solAmount) > 0) {
+      setCurrency("EUR");
+      setConvertLoading(true);
+      try {
+        // Get EUR→SOL rate using amount=1, then invert to get SOL→EUR
+        const res = await howl<ApiResponse<MarketConvertData>>(
+          `/market/convert?from=eur&to=sol&amount=1`,
+          { token },
+        );
+        const solPerEur = parseFloat(res.data.conversion.output_amount_sol);
+        const eur = (parseFloat(solAmount) / solPerEur).toFixed(2);
+        setEurAmount(eur);
+      } catch {
+        setEurAmount("");
+      } finally {
+        setConvertLoading(false);
+      }
+    } else if (next === "SOL" && eurAmount && Number(eurAmount) > 0) {
+      setCurrency("SOL");
+      setConvertLoading(true);
+      try {
+        const res = await howl<ApiResponse<MarketConvertData>>(
+          `/market/convert?from=eur&to=sol&amount=${eurAmount}`,
+          { token },
+        );
+        const sol = res.data.conversion.output_amount_sol;
+        setEurToSol(sol);
+        setSolAmount(sol);
+      } catch {
+        setSolAmount("");
+      } finally {
+        setConvertLoading(false);
+      }
+    } else {
+      setCurrency(next);
+    }
+  }
+
   async function handleConfirm() {
     const v = parseFloat(solAmount);
     if (!v || v <= 0) { toast.error("Enter a valid amount."); return; }
@@ -182,7 +224,7 @@ export function InvestSheet({
                 </label>
                 <button
                   type="button"
-                  onClick={() => { setCurrency((c) => c === "SOL" ? "EUR" : "SOL"); setEurToSol(null); }}
+                  onClick={handleCurrencySwitch}
                   className="flex items-center gap-1.5 rounded-full border border-border bg-card px-2.5 py-1 text-[11px] font-medium"
                 >
                   <span className={currency === "SOL" ? "font-bold" : "text-muted-foreground"}>SOL</span>
