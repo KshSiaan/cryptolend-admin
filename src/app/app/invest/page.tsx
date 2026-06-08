@@ -109,12 +109,18 @@ export default function InvestPage() {
                     <span className="font-bold">
                       {loan.target_amount_sol} SOL
                     </span>
+                    <div className="font-bold text-xs text-muted-foreground">
+                      {loan.target_amount_eur} €
+                    </div>
                   </span>
                   <span>
                     Raised{" "}
                     <span className="font-bold">
                       {loan.raised_amount_sol} SOL
                     </span>
+                                        <div className="font-bold text-xs text-muted-foreground">
+                      {loan.raised_amount_eur} €
+                    </div>
                   </span>
                   <span className="text-green-pos font-bold">
                     APR {loan.apr_percent}%

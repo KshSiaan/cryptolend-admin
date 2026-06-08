@@ -47,12 +47,18 @@ export function InvestSheet({
   const balanceSol = profileData?.data?.wallet_balance_sol ?? "0";
 
   const solVal = parseFloat(solAmount) || 0;
+  const eurVal = parseFloat(eurAmount) || 0;
   const aprDecimal = loan.apr_percent / 100;
   const monthlyPayment =
     solVal > 0 ? (solVal * aprDecimal) / 12 + solVal / loan.duration_months : 0;
   const totalInterest =
     solVal > 0 ? ((solVal * aprDecimal) / 12) * loan.duration_months : 0;
   const totalReturn = solVal + totalInterest;
+  const monthlyPaymentEur =
+    eurVal > 0 ? (eurVal * aprDecimal) / 12 + eurVal / loan.duration_months : 0;
+  const totalInterestEur =
+    eurVal > 0 ? ((eurVal * aprDecimal) / 12) * loan.duration_months : 0;
+  const totalReturnEur = eurVal + totalInterestEur;
 
   // EUR → SOL conversion (debounced, only when EUR mode)
   useEffect(() => {
@@ -234,6 +240,9 @@ export function InvestSheet({
               <p className="text-xs text-muted-foreground">
                 {loan.raised_amount_sol} of {loan.target_amount_sol} SOL raised
               </p>
+              <p className="text-xs text-muted-foreground text-end">
+                {loan.raised_amount_eur} of {loan.target_amount_eur} € raised
+              </p>
             </div>
 
             {/* Amount input */}
@@ -247,14 +256,7 @@ export function InvestSheet({
                 </label>
                 <button
                   type="button"
-<<<<<<< HEAD
                   onClick={handleCurrencySwitch}
-=======
-                  onClick={() => {
-                    setCurrency((c) => (c === "SOL" ? "EUR" : "SOL"));
-                    setEurToSol(null);
-                  }}
->>>>>>> 7a21c618d03bc346a481ebc6e15220fe17262814
                   className="flex items-center gap-1.5 rounded-full border border-border bg-card px-2.5 py-1 text-[11px] font-medium"
                 >
                   <span
@@ -319,17 +321,20 @@ export function InvestSheet({
                 {[
                   {
                     label: "Monthly payment",
-                    value: `${monthlyPayment.toFixed(4)} SOL`,
+                    sol: `${monthlyPayment.toFixed(4)} SOL`,
+                    eur: eurVal > 0 ? `${monthlyPaymentEur.toFixed(2)} EUR` : null,
                     green: false,
                   },
                   {
                     label: "Total interest earned",
-                    value: `+${totalInterest.toFixed(4)} SOL`,
+                    sol: `+${totalInterest.toFixed(4)} SOL`,
+                    eur: eurVal > 0 ? `+${totalInterestEur.toFixed(2)} EUR` : null,
                     green: true,
                   },
                   {
                     label: `Total return after ${loan.duration_months}mo`,
-                    value: `${totalReturn.toFixed(4)} SOL`,
+                    sol: `${totalReturn.toFixed(4)} SOL`,
+                    eur: eurVal > 0 ? `${totalReturnEur.toFixed(2)} EUR` : null,
                     green: false,
                   },
                 ].map((r) => (
@@ -338,11 +343,14 @@ export function InvestSheet({
                     className="flex items-center justify-between px-4 py-2.5 text-sm"
                   >
                     <span className="text-muted-foreground">{r.label}</span>
-                    <span
-                      className={`font-semibold ${r.green ? "text-green-pos" : ""}`}
-                    >
-                      {r.value}
-                    </span>
+                    <div className={`text-right font-semibold ${r.green ? "text-green-pos" : ""}`}>
+                      <span>{r.sol}</span>
+                      {r.eur && (
+                        <span className="block text-xs text-muted-foreground font-normal">
+                          {r.eur}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>

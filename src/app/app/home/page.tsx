@@ -66,14 +66,9 @@ export default function HomePage() {
             <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
               Balance
             </p>
-<<<<<<< HEAD
             <p className="text-sm font-bold">
               {parseFloat(balanceSol).toFixed(2) || 0} SOL
             </p>
-=======
-            <p className="text-sm font-bold">{balanceSol} SOL</p>
-            <p className="text-sm font-bold">{balanceEur} €</p>
->>>>>>> 7a21c618d03bc346a481ebc6e15220fe17262814
           </div>
           <Avatar className="w-10 h-10">
             <AvatarImage src={profile?.profile_photo_url ?? ""} />
