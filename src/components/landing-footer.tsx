@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 export function LandingFooter() {
@@ -5,14 +6,15 @@ export function LandingFooter() {
     <footer className="border-t border-border bg-card">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 py-8">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
-          <Link
-            href="/"
-            className="flex items-center gap-2 font-bold text-base tracking-tight shrink-0"
-          >
-            <span className="w-7 h-7 rounded-lg bg-orange flex items-center justify-center text-primary-foreground text-xs font-black">
-              C
-            </span>
-            CryptoLend
+          <Link href="/" className="flex items-center shrink-0">
+            <Image
+              src="/logo.svg"
+              alt="CryptoLend"
+              width={100}
+              height={34}
+              className="h-7 w-auto"
+              unoptimized
+            />
           </Link>
 
           <nav className="flex items-center gap-6">

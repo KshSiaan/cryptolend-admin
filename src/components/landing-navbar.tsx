@@ -1,17 +1,19 @@
+import Image from "next/image";
 import Link from "next/link";
 
 export function LandingNavbar() {
   return (
     <nav className="sticky top-0 z-50 border-b border-border bg-card/80 backdrop-blur-md">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 flex items-center justify-between h-16">
-        <Link
-          href="/"
-          className="flex items-center gap-2 font-bold text-xl tracking-tight"
-        >
-          <span className="w-8 h-8 rounded-lg bg-orange flex items-center justify-center text-primary-foreground text-sm font-black">
-            C
-          </span>
-          CryptoLend
+        <Link href="/" className="flex items-center">
+          <Image
+            src="/logo.svg"
+            alt="CryptoLend"
+            width={120}
+            height={40}
+            className="h-8 w-auto"
+            unoptimized
+          />
         </Link>
         <div className="flex items-center gap-2">
           <Link

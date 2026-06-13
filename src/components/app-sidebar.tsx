@@ -1,5 +1,6 @@
 "use client";
 import * as React from "react";
+import Image from "next/image";
 
 import {
   ArrowDownToLine,
@@ -62,13 +63,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader className="px-4 py-4">
         <div className="flex items-center gap-2.5 group-data-[collapsible=icon]:justify-center">
           <div className="size-8 rounded-full bg-sidebar-primary items-center justify-center shrink-0 hidden group-data-[collapsible=icon]:flex">
-            <span className="text-sidebar-primary-foreground font-bold text-sm ">
-              C
-            </span>
+            <span className="text-sidebar-primary-foreground font-bold text-sm">C</span>
           </div>
-          <span className="font-bold text-base tracking-tight text-sidebar-foreground group-data-[collapsible=icon]:hidden">
-            CryptoLend
-          </span>
+          <div className="group-data-[collapsible=icon]:hidden">
+            <Image
+              src="/logo.svg"
+              alt="CryptoLend"
+              width={110}
+              height={36}
+              className="h-7 w-auto"
+              unoptimized
+            />
+          </div>
         </div>
       </SidebarHeader>
 

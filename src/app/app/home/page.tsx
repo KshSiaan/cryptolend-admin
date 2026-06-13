@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowDownLeft, ArrowUpRight, BarChart2 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 
 import { DepositSheet } from "@/components/sheets/deposit-sheet";
@@ -55,7 +56,7 @@ export default function HomePage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold tracking-tight">CryptoLend</h1>
+          <Image src="/logo.svg" alt="CryptoLend" width={110} height={36} className="h-7 w-auto" unoptimized />
           <p className="text-sm text-muted-foreground">
             {getGreeting()}
             {firstName ? `, ${firstName}` : ""}

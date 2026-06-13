@@ -1,0 +1,11 @@
+<svg viewBox="105 90 190 95" xmlns="http://www.w3.org/2000/svg">
+  <path d="M 110 118 Q 200 68 290 118" fill="none" stroke="#111" stroke-width="2" stroke-linecap="round"/>
+  <line x1="124" y1="118" x2="124" y2="140" stroke="#111" stroke-width="2" stroke-linecap="round"/>
+  <line x1="276" y1="118" x2="276" y2="140" stroke="#111" stroke-width="2" stroke-linecap="round"/>
+  <line x1="110" y1="140" x2="290" y2="140" stroke="#111" stroke-width="0.6" stroke-opacity="0.15"/>
+  <polygon points="171,95  218,95  213,104  166,104" fill="#cccccc"/>
+  <polygon points="165,108  215,108  210,118  160,118" fill="#888888"/>
+  <polygon points="158,122  212,122  207,132  153,132" fill="#333333"/>
+  <text x="200" y="165" text-anchor="middle" font-family="Georgia,serif" font-size="18" font-weight="700" fill="#111" letter-spacing="4">SOLBRIDGE</text>
+  <text x="200" y="180" text-anchor="middle" font-family="Georgia,serif" font-size="8" fill="#888" letter-spacing="7">CAPITAL</text>
+</svg>
