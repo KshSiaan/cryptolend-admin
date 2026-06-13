@@ -322,13 +322,15 @@ export function InvestSheet({
                   {
                     label: "Monthly payment",
                     sol: `${monthlyPayment.toFixed(4)} SOL`,
-                    eur: eurVal > 0 ? `${monthlyPaymentEur.toFixed(2)} EUR` : null,
+                    eur:
+                      eurVal > 0 ? `${monthlyPaymentEur.toFixed(2)} EUR` : null,
                     green: false,
                   },
                   {
                     label: "Total interest earned",
                     sol: `+${totalInterest.toFixed(4)} SOL`,
-                    eur: eurVal > 0 ? `+${totalInterestEur.toFixed(2)} EUR` : null,
+                    eur:
+                      eurVal > 0 ? `+${totalInterestEur.toFixed(2)} EUR` : null,
                     green: true,
                   },
                   {
@@ -343,7 +345,9 @@ export function InvestSheet({
                     className="flex items-center justify-between px-4 py-2.5 text-sm"
                   >
                     <span className="text-muted-foreground">{r.label}</span>
-                    <div className={`text-right font-semibold ${r.green ? "text-green-pos" : ""}`}>
+                    <div
+                      className={`text-right font-semibold ${r.green ? "text-green-pos" : ""}`}
+                    >
                       <span>{r.sol}</span>
                       {r.eur && (
                         <span className="block text-xs text-muted-foreground font-normal">
