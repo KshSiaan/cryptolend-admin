@@ -241,7 +241,7 @@ export default function LandingPage() {
                 width={520}
                 height={440}
                 unoptimized
-                className="w-full max-w-md rounded-2xl object-cover"
+                className="w-full max-w-md aspect-square rounded-2xl object-cover"
               />
             </div>
           </div>
@@ -280,7 +280,7 @@ export default function LandingPage() {
                   width={520}
                   height={400}
                   unoptimized
-                  className="w-full rounded-2xl object-cover"
+                  className="w-full aspect-square rounded-2xl object-cover"
                 />
                 <div className="absolute top-4 right-4 rounded-xl bg-card border border-border shadow-lg px-4 py-3 text-center">
                   <p className="text-[10px] text-muted-foreground uppercase tracking-widest">
@@ -308,7 +308,7 @@ export default function LandingPage() {
                   width={520}
                   height={400}
                   unoptimized
-                  className="w-full rounded-2xl object-cover"
+                  className="w-full aspect-square rounded-2xl object-cover"
                 />
                 <div className="absolute bottom-4 left-4 rounded-xl bg-card border border-border shadow-lg px-4 py-3 text-center">
                   <p className="text-[10px] text-muted-foreground uppercase tracking-widest">
@@ -373,7 +373,7 @@ export default function LandingPage() {
                   width={520}
                   height={400}
                   unoptimized
-                  className="w-full rounded-2xl object-cover"
+                  className="w-full aspect-square rounded-2xl object-cover"
                 />
                 <div className="absolute top-4 right-4 rounded-xl bg-card border border-border shadow-lg px-4 py-3 text-center">
                   <p className="text-[10px] text-muted-foreground uppercase tracking-widest">
@@ -438,7 +438,7 @@ export default function LandingPage() {
                   width={520}
                   height={480}
                   unoptimized
-                  className="w-full rounded-2xl object-cover"
+                  className="w-full aspect-square rounded-2xl object-cover"
                 />
                 <div className="absolute bottom-4 left-4 right-4 rounded-2xl bg-card text-foreground shadow-2xl p-4">
                   <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">
@@ -593,7 +593,7 @@ export default function LandingPage() {
                 width={520}
                 height={400}
                 unoptimized
-                className="w-full max-w-md rounded-2xl object-cover"
+                className="w-full max-w-md aspect-square rounded-2xl object-cover"
               />
             </div>
           </div>
