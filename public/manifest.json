@@ -1,7 +1,7 @@
 {
   "name": "CryptoLend",
   "short_name": "CryptoLend",
-  "description": "Crypto lending & investment platform",
+  "description": "Solbridge Capitaling & investment platform",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

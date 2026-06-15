@@ -215,7 +215,8 @@ export default function LandingPage() {
               </h2>
               <p className="text-muted-foreground text-sm mb-8 max-w-md">
                 Grow your assets with flexible loan investments. Whether you're
-                starting small or scaling up, Solbridge Capital adapts to your goals.
+                starting small or scaling up, Solbridge Capital adapts to your
+                goals.
               </p>
               <ul className="space-y-6">
                 {portfolioFeatures.map(({ icon: Icon, title, desc }) => (
@@ -575,8 +576,8 @@ export default function LandingPage() {
               </h2>
               <p className="text-muted-foreground text-sm leading-relaxed mb-6 max-w-sm">
                 Our support team answers real questions about investing. No
-                scripts, no upselling — just honest answers about how Solbridge Capital
-                works.
+                scripts, no upselling — just honest answers about how Solbridge
+                Capital works.
               </p>
               <Link
                 href="/auth/register"

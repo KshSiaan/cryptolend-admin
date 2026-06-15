@@ -21,7 +21,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Solbridge Capital",
-  description: "Crypto lending & investment platform",
+  description: "Solbridge Capitaling & investment platform",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
