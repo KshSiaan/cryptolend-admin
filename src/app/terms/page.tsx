@@ -20,9 +20,9 @@ export default function TermsPage() {
               1. Acceptance of Terms
             </h2>
             <p>
-              By accessing or using CryptoLend ("the Platform"), you agree to be
+              By accessing or using Solbridge Capital ("the Platform"), you agree to be
               bound by these Terms of Service. If you do not agree, you may not
-              use the Platform. CryptoLend reserves the right to update these
+              use the Platform. Solbridge Capital reserves the right to update these
               terms at any time. Continued use after changes constitutes
               acceptance.
             </p>
@@ -36,7 +36,7 @@ export default function TermsPage() {
               You must be at least 18 years of age and legally permitted to
               invest in your jurisdiction to create an account. By registering,
               you represent and warrant that you meet these requirements.
-              CryptoLend may require identity verification (KYC) before
+              Solbridge Capital may require identity verification (KYC) before
               permitting investment activity.
             </p>
           </section>
@@ -46,9 +46,9 @@ export default function TermsPage() {
               3. Platform Services
             </h2>
             <p>
-              CryptoLend provides a peer-to-peer lending marketplace on the
+              Solbridge Capital provides a peer-to-peer lending marketplace on the
               Solana blockchain. The Platform connects investors with verified
-              borrowers. CryptoLend does not act as a lender, broker, or
+              borrowers. Solbridge Capital does not act as a lender, broker, or
               financial advisor. All investment decisions are made solely by the
               user.
             </p>
@@ -59,7 +59,7 @@ export default function TermsPage() {
               4. Investment Risks
             </h2>
             <p>
-              Investing through CryptoLend involves significant risk, including
+              Investing through Solbridge Capital involves significant risk, including
               the possible loss of principal. Loans are not guaranteed, and
               borrower default may result in partial or total loss of your
               investment. Past returns are not indicative of future performance.
@@ -73,7 +73,7 @@ export default function TermsPage() {
             </h2>
             <p>
               You are responsible for maintaining the confidentiality of your
-              account credentials. You agree to notify CryptoLend immediately of
+              account credentials. You agree to notify Solbridge Capital immediately of
               any unauthorized access. You are solely responsible for all
               activity that occurs under your account.
             </p>
@@ -84,9 +84,9 @@ export default function TermsPage() {
               6. Fees
             </h2>
             <p>
-              CryptoLend may charge service fees on returns or transactions. All
+              Solbridge Capital may charge service fees on returns or transactions. All
               applicable fees will be disclosed before any transaction is
-              confirmed. CryptoLend reserves the right to modify its fee
+              confirmed. Solbridge Capital reserves the right to modify its fee
               structure with reasonable notice to users.
             </p>
           </section>
@@ -96,7 +96,7 @@ export default function TermsPage() {
               7. Termination
             </h2>
             <p>
-              CryptoLend may suspend or terminate your account at any time for
+              Solbridge Capital may suspend or terminate your account at any time for
               violation of these Terms, fraudulent activity, or at our
               discretion. Upon termination, your access to the Platform will
               cease. Any active investments will continue per their original
@@ -109,7 +109,7 @@ export default function TermsPage() {
               8. Limitation of Liability
             </h2>
             <p>
-              To the maximum extent permitted by law, CryptoLend shall not be
+              To the maximum extent permitted by law, Solbridge Capital shall not be
               liable for any indirect, incidental, or consequential damages
               arising from your use of the Platform, including investment losses,
               data loss, or service interruptions.
@@ -134,7 +134,7 @@ export default function TermsPage() {
             <p>
               For questions regarding these Terms, contact us at{" "}
               <span className="text-orange font-medium">
-                legal@cryptolend.io
+                legal@solbridgecapital.io
               </span>
               .
             </p>

@@ -216,13 +216,13 @@ export default function ProfilePage() {
             <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center">
               <Image
                 src="/icon-192.png"
-                alt="CryptoLend app icon"
+                alt="Solbridge Capital app icon"
                 width={32}
                 height={32}
               />
             </div>
             <div className="flex-1">
-              <div className="font-semibold">Install CryptoLend</div>
+              <div className="font-semibold">Install Solbridge Capital</div>
               <p className="text-sm text-muted-foreground mt-1">
                 Install this app to your device for faster access and a
                 native-like experience. This message stays here until you

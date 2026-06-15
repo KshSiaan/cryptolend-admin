@@ -68,7 +68,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <div className="group-data-[collapsible=icon]:hidden">
             <Image
               src="/logo.svg"
-              alt="CryptoLend"
+              alt="Solbridge Capital"
               width={110}
               height={36}
               className="h-7 w-auto"

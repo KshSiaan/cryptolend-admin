@@ -56,7 +56,7 @@ export default function HomePage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <Image src="/logo.svg" alt="CryptoLend" width={110} height={36} className="h-7 w-auto" unoptimized />
+          <Image src="/logo.svg" alt="Solbridge Capital" width={110} height={36} className="h-7 w-auto" unoptimized />
           <p className="text-sm text-muted-foreground">
             {getGreeting()}
             {firstName ? `, ${firstName}` : ""}

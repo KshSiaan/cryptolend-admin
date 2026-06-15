@@ -9,7 +9,7 @@ export function LandingFooter() {
           <Link href="/" className="flex items-center shrink-0">
             <Image
               src="/logo.svg"
-              alt="CryptoLend"
+              alt="Solbridge Capital"
               width={100}
               height={34}
               className="h-7 w-auto"
@@ -34,7 +34,7 @@ export function LandingFooter() {
           </nav>
 
           <p className="text-xs text-muted-foreground shrink-0">
-            © {new Date().getFullYear()} CryptoLend
+            © {new Date().getFullYear()} Solbridge Capital
           </p>
         </div>
 

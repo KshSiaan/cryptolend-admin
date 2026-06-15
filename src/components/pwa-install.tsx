@@ -120,7 +120,7 @@ export default function PwaInstall() {
     <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-xl">
       <div className="bg-white/95 dark:bg-slate-900/95 border rounded-lg p-3 shadow-md flex items-center gap-3">
         <div className="flex-1">
-          <div className="font-semibold">Install CryptoLend</div>
+          <div className="font-semibold">Install Solbridge Capital</div>
           <div className="text-sm text-slate-600 dark:text-slate-300">
             Install this app to your mobile device for a native-like experience
             and faster access.

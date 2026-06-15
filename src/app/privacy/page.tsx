@@ -20,7 +20,7 @@ export default function PrivacyPage() {
               1. Information We Collect
             </h2>
             <p>
-              When you register and use CryptoLend, we collect personal
+              When you register and use Solbridge Capital, we collect personal
               information including your name, email address, government-issued
               ID (for KYC), Solana wallet address, and transaction history. We
               also collect usage data such as IP addresses, browser type, and
@@ -61,7 +61,7 @@ export default function PrivacyPage() {
             <p>
               Transactions on the Solana blockchain are public and immutable.
               Your wallet address and transaction amounts may be visible on-chain.
-              CryptoLend does not control the public nature of blockchain data.
+              Solbridge Capital does not control the public nature of blockchain data.
             </p>
           </section>
 
@@ -133,7 +133,7 @@ export default function PrivacyPage() {
               For privacy-related inquiries, contact our Data Protection Officer
               at{" "}
               <span className="text-orange font-medium">
-                privacy@cryptolend.io
+                privacy@solbridgecapital.io
               </span>
               .
             </p>

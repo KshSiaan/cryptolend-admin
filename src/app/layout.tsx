@@ -20,13 +20,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CryptoLend",
+  title: "Solbridge Capital",
   description: "Crypto lending & investment platform",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "CryptoLend",
+    title: "Solbridge Capital",
     startupImage: [
       "/startup/apple-touch-startup-image-1170x2532.png",
       {

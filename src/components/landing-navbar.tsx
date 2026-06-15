@@ -8,7 +8,7 @@ export function LandingNavbar() {
         <Link href="/" className="flex items-center">
           <Image
             src="/logo.svg"
-            alt="CryptoLend"
+            alt="Solbridge Capital"
             width={120}
             height={40}
             className="h-8 w-auto"

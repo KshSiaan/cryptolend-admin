@@ -51,15 +51,15 @@ const portfolioFeatures = [
 
 const faqs = [
   {
-    q: "What is a loan investment on CryptoLend?",
+    q: "What is a loan investment on Solbridge Capital?",
     a: "You lend SOL to verified borrowers through our platform. Borrowers repay principal + interest monthly, and those repayments are credited to your wallet.",
   },
   {
-    q: "What types of loans are available on CryptoLend?",
+    q: "What types of loans are available on Solbridge Capital?",
     a: "Business loans, trade finance, and tech venture bridge loans — each with different APR ranges, durations, and risk grades.",
   },
   {
-    q: "How do I start investing on CryptoLend?",
+    q: "How do I start investing on Solbridge Capital?",
     a: "Create an account, complete KYC, deposit SOL, then browse available loans and invest from 0.05 SOL.",
   },
   {
@@ -71,7 +71,7 @@ const faqs = [
     a: "Your uninvested balance can be withdrawn anytime. Active investments run to maturity per the loan schedule.",
   },
   {
-    q: "How does CryptoLend generate passive income?",
+    q: "How does Solbridge Capital generate passive income?",
     a: "Monthly loan repayments compound over time. Reinvesting returns accelerates growth — many investors reach full passive income within 12–24 months.",
   },
 ];
@@ -215,7 +215,7 @@ export default function LandingPage() {
               </h2>
               <p className="text-muted-foreground text-sm mb-8 max-w-md">
                 Grow your assets with flexible loan investments. Whether you're
-                starting small or scaling up, CryptoLend adapts to your goals.
+                starting small or scaling up, Solbridge Capital adapts to your goals.
               </p>
               <ul className="space-y-6">
                 {portfolioFeatures.map(({ icon: Icon, title, desc }) => (
@@ -478,7 +478,7 @@ export default function LandingPage() {
                 Your security first.
               </h2>
               <p className="text-muted-foreground text-sm leading-relaxed mb-6 max-w-sm">
-                Every mechanism on CryptoLend is designed to protect your
+                Every mechanism on Solbridge Capital is designed to protect your
                 capital — from KYC to on-chain settlement.
               </p>
               <Link
@@ -575,7 +575,7 @@ export default function LandingPage() {
               </h2>
               <p className="text-muted-foreground text-sm leading-relaxed mb-6 max-w-sm">
                 Our support team answers real questions about investing. No
-                scripts, no upselling — just honest answers about how CryptoLend
+                scripts, no upselling — just honest answers about how Solbridge Capital
                 works.
               </p>
               <Link
@@ -632,7 +632,7 @@ export default function LandingPage() {
               </h2>
               <p className="text-muted-foreground text-sm leading-relaxed">
                 Still have questions?{" "}
-                <span className="text-orange">support@cryptolend.io</span>
+                <span className="text-orange">support@solbridgecapital.io</span>
               </p>
             </div>
             <div className="divide-y divide-border">
