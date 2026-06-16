@@ -231,7 +231,7 @@ export function InvestYourWay() {
           </p>
         </div>
 
-        <div className="grid grid-cols-[5fr_7fr] gap-16 items-start">
+        <div className="grid grid-cols-1 md:grid-cols-[5fr_7fr] gap-8 md:gap-16 items-start">
           {/* Left — accordion tabs */}
           <div>
             {tabs.map((tab, i) => {
@@ -269,7 +269,7 @@ export function InvestYourWay() {
           </div>
 
           {/* Right — animated card + photo */}
-          <div className="relative h-[500px]">
+          <div className="relative h-auto md:h-125">
             <AnimatePresence mode="wait">
               <motion.div
                 key={active}
@@ -277,30 +277,32 @@ export function InvestYourWay() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -14 }}
                 transition={{ duration: 0.24, ease: [0.25, 0.1, 0.25, 1] }}
-                className="absolute top-0 left-0 w-[72%] z-10"
+                className="relative md:absolute md:top-0 md:left-0 w-full md:w-[72%] z-10"
               >
                 <Card />
               </motion.div>
             </AnimatePresence>
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={`photo-${active}`}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.3 }}
-                className="absolute bottom-0 right-0 w-[54%] h-[300px] rounded-3xl overflow-hidden z-0"
-              >
-                <Image
-                  src={tabs[active].photo}
-                  alt="Investor"
-                  width={320}
-                  height={300}
-                  className="w-full h-full object-cover"
-                  unoptimized
-                />
-              </motion.div>
-            </AnimatePresence>
+            <div className="hidden md:block">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={`photo-${active}`}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="absolute bottom-0 right-0 w-[54%] h-75 rounded-3xl overflow-hidden z-0"
+                >
+                  <Image
+                    src={tabs[active].photo}
+                    alt="Investor"
+                    width={320}
+                    height={300}
+                    className="w-full h-full object-cover"
+                    unoptimized
+                  />
+                </motion.div>
+              </AnimatePresence>
+            </div>
           </div>
         </div>
       </div>

@@ -1,4 +1,4 @@
-﻿import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { LoansCarousel } from "@/components/loans-carousel";
 import {
   BadgeCheck,
@@ -11,37 +11,39 @@ import {
   CircleDollarSign,
   Coins,
   Eye,
-  // Facebook,
-  // Instagram,
   Layers,
   LayoutList,
-  // Linkedin,
   Lock,
   Mail,
   ShieldCheck,
-  // Twitter,
   Wallet,
   Wifi,
 } from "lucide-react";
 import Image from "next/image";
 
+import { HeroCard } from "@/components/hero-card";
 import { InvestYourWay } from "@/components/invest-your-way";
 import Navig from "./navig";
+
 export default function Page() {
   return (
     <div className="bg-white">
       <header className="bg-[#203828] h-[95dvh] w-full flex flex-col">
         <Navig />
-        <div className="flex-1 w-full px-[7%] grid grid-cols-3 gap-6 pt-[3.5%] mb-[3.5%]">
-          <Image
-            src="/0.jpg"
-            alt="Image 0"
-            width={500}
-            height={400}
-            className="object-cover h-[60dvh] rounded-4xl"
-          />
+        <div className="flex-1 w-full px-[7%] grid grid-cols-1 md:grid-cols-3 gap-6 pt-[5%] md:pt-[3.5%] my-[3.5%]">
+          {/* Left image — desktop only */}
+          <div className="hidden md:block">
+            <Image
+              src="/0.jpg"
+              alt="Image 0"
+              width={500}
+              height={400}
+              className="object-cover h-[60dvh] rounded-4xl w-full"
+            />
+          </div>
+          {/* Center text */}
           <div className="h-full flex flex-col justify-center gap-6">
-            <h1 className="text-6xl text-center font-bold text-white">
+            <h1 className="text-4xl md:text-6xl text-center font-bold text-white">
               Build wealth with confidence
             </h1>
             <p className="text-center text-white">
@@ -54,32 +56,31 @@ export default function Page() {
               Get started
             </Button>
           </div>
-          <Image
-            src="https://images.unsplash.com/photo-1507041957456-9c397ce39c97?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-            alt="Image 0"
-            width={500}
-            height={400}
-            className="object-cover h-[60dvh] rounded-4xl"
-          />
+          {/* Right HeroCard — desktop only */}
+          <div className="hidden md:block">
+            <HeroCard />
+          </div>
         </div>
-        <div className="text-center py-8 flex justify-center items-center gap-[7%] text-background font-medium">
+        <div className="text-center py-6 md:py-8 flex flex-col md:flex-row justify-center items-center gap-3 md:gap-[7%] text-background font-medium text-sm md:text-base px-4">
           <h3 className="flex items-center gap-2">
-            <CheckIcon /> Trusted by 700k+ registered users
+            <CheckIcon size={16} /> Trusted by 700k+ registered users
           </h3>
           <h3 className="flex items-center gap-2">
-            <CheckIcon /> â‚¬800 m+ assets under management
+            <CheckIcon size={16} /> €800 m+ assets under management
           </h3>
           <h3 className="flex items-center gap-2">
-            <CheckIcon /> Licensed investment firm under MiFID
+            <CheckIcon size={16} /> Licensed investment firm under MiFID
           </h3>
         </div>
       </header>
+
       <main className="mt-12">
-        <section className="py-24 px-[7%] bg-white">
-          <div className="grid grid-cols-2 gap-20 items-start mx-auto max-w-7xl">
+        {/* For your financial future */}
+        <section className="py-16 md:py-24 px-[7%] bg-white">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-20 items-start mx-auto max-w-7xl">
             {/* Left */}
             <div>
-              <h2 className="text-[2.6rem] font-bold text-[#111827] leading-tight mb-5">
+              <h2 className="text-[2rem] md:text-[2.6rem] font-bold text-[#111827] leading-tight mb-5">
                 For your financial future
               </h2>
               <p className="text-[#6b7280] text-[15px] leading-relaxed mb-10 max-w-[420px]">
@@ -87,7 +88,7 @@ export default function Page() {
                 you&apos;re just starting out or are more experienced, we make
                 investing simple.
               </p>
-              <div className="space-y-16">
+              <div className="space-y-10 md:space-y-16">
                 <div className="flex items-start gap-4">
                   <div className="w-10 h-10 rounded-xl bg-[#eef2ee] flex items-center justify-center shrink-0">
                     <Briefcase size={17} className="text-[#203828]" />
@@ -125,7 +126,7 @@ export default function Page() {
                       Low barriers
                     </p>
                     <p className="text-[#6b7280] text-[14px] leading-relaxed">
-                      Start from just â‚¬50, with low and transparent fees.
+                      Start from just €50, with low and transparent fees.
                     </p>
                   </div>
                 </div>
@@ -152,15 +153,16 @@ export default function Page() {
                 alt="Investment app on phone"
                 width={600}
                 height={700}
-                className="h-145 aspect-4/5 object-cover rounded-3xl"
+                className="w-full aspect-[4/5] md:h-145 md:aspect-4/5 object-cover rounded-3xl"
                 unoptimized
               />
             </div>
           </div>
         </section>
 
-        <section className="py-24 px-[7%] bg-white">
-          <div className="grid grid-cols-2 gap-20 items-center mx-auto max-w-7xl">
+        {/* Loans */}
+        <section className="py-16 md:py-24 px-[7%] bg-white">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-20 items-center mx-auto max-w-7xl">
             {/* Left */}
             <div>
               <div className="flex items-center gap-2 mb-5">
@@ -169,7 +171,7 @@ export default function Page() {
                   Loans
                 </span>
               </div>
-              <h2 className="text-[3rem] font-bold text-[#111827] leading-[1.1] mb-5">
+              <h2 className="text-[2.2rem] md:text-[3rem] font-bold text-[#111827] leading-[1.1] mb-5">
                 Passive income from
                 <br />
                 day one
@@ -190,20 +192,22 @@ export default function Page() {
             <LoansCarousel />
           </div>
         </section>
-        <section className="py-24 px-[7%] bg-white">
-          <div className="grid grid-cols-2 gap-20 items-center mx-auto max-w-7xl relative">
-            {/* Left â€” image + floating card */}
-            <div className="relative">
+
+        {/* Bonds */}
+        <section className="py-16 md:py-24 px-[7%] bg-white">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-20 items-center mx-auto max-w-7xl relative">
+            {/* Left — image + floating card */}
+            <div className="relative order-2 md:order-1">
               <Image
                 src="/3.jpg"
                 alt="Person investing"
                 width={560}
                 height={480}
-                className="w-[68%] h-[440px] object-cover rounded-3xl"
+                className="w-full md:w-[68%] h-64 md:h-[440px] object-cover rounded-3xl"
                 unoptimized
               />
-              {/* Floating bond list card */}
-              <div className="absolute right-0 top-[-60%] translate-y-1/2 w-[58%] bg-white rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.10)] overflow-hidden">
+              {/* Floating bond list card — desktop only */}
+              <div className="hidden md:block absolute right-0 top-[-60%] translate-y-1/2 w-[58%] bg-white rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.10)] overflow-hidden">
                 {[
                   {
                     type: "Senior Secured Bond",
@@ -260,20 +264,20 @@ export default function Page() {
               </div>
             </div>
 
-            {/* Right â€” text */}
-            <div>
+            {/* Right — text */}
+            <div className="order-1 md:order-2">
               <div className="flex items-center gap-2 mb-5">
                 <LayoutList size={15} className="text-[#6b7280]" />
                 <span className="text-[#6b7280] font-medium">Bonds</span>
               </div>
-              <h2 className="text-[3rem] font-bold text-[#111827] leading-[1.1] mb-5">
+              <h2 className="text-[2.2rem] md:text-[3rem] font-bold text-[#111827] leading-[1.1] mb-5">
                 Access high-yield
                 <br />
                 corporate bonds
               </h2>
               <p className="text-[#6b7280] text-[15px] leading-relaxed mb-8 max-w-100">
                 Earn fixed income from coupon payments. Choose automated
-                portfolios or hand-pick individual bonds. Start from â‚¬50.
+                portfolios or hand-pick individual bonds. Start from €50.
               </p>
               <button
                 type="button"
@@ -285,10 +289,10 @@ export default function Page() {
           </div>
         </section>
 
-        {/* Real estate section */}
-        <section className="py-24 px-[7%] bg-white">
-          <div className="grid grid-cols-2 gap-20 items-center mx-auto max-w-7xl">
-            {/* Left â€” text */}
+        {/* Real estate */}
+        <section className="py-16 md:py-24 px-[7%] bg-white">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-20 items-center mx-auto max-w-7xl">
+            {/* Left — text */}
             <div>
               <div className="flex items-center gap-2 mb-5">
                 <Building2 size={15} className="text-[#6b7280]" />
@@ -296,7 +300,7 @@ export default function Page() {
                   Real estate
                 </span>
               </div>
-              <h2 className="text-[3rem] font-bold text-[#111827] leading-[1.1] mb-5">
+              <h2 className="text-[2.2rem] md:text-[3rem] font-bold text-[#111827] leading-[1.1] mb-5">
                 Rental income and
                 <br />
                 long-term growth
@@ -313,49 +317,63 @@ export default function Page() {
               </button>
             </div>
 
-            {/* Right â€” staggered image composition */}
-            <div className="relative h-[420px]">
-              {/* Back image â€” right, taller */}
-              <div className="absolute right-0 top-0 w-[57%]">
-                <div className="relative">
-                  <Image
-                    src="/5.jpg"
-                    alt="Property interior"
-                    width={400}
-                    height={340}
-                    className="w-full h-[340px] object-cover rounded-3xl"
-                    unoptimized
-                  />
-                  {/* Income badge â€” top left */}
-                  <div className="absolute top-4 -left-1/5 rounded-br-none! bg-[#203828] text-white rounded-2xl px-4 py-3 leading-tight">
-                    <p className="text-[11px] font-medium opacity-80">Income</p>
-                    <p className="text-xl font-bold">+ â‚¬ 50</p>
-                  </div>
-                  {/* Invested badge â€” bottom */}
-                  <div className="absolute bottom-4 left-4 bg-white rounded-full px-3.5 py-1.5 shadow-md">
-                    <p className="text-[13px] font-semibold text-[#111827]">
-                      Invested â‚¬2200
-                    </p>
+            {/* Right — images */}
+            <div>
+              {/* Mobile: single image */}
+              <div className="md:hidden">
+                <Image
+                  src="/5.jpg"
+                  alt="Property interior"
+                  width={600}
+                  height={400}
+                  className="w-full h-64 object-cover rounded-3xl"
+                  unoptimized
+                />
+              </div>
+              {/* Desktop: staggered composition */}
+              <div className="hidden md:block relative h-[420px]">
+                {/* Back image — right, taller */}
+                <div className="absolute right-0 top-0 w-[57%]">
+                  <div className="relative">
+                    <Image
+                      src="/5.jpg"
+                      alt="Property interior"
+                      width={400}
+                      height={340}
+                      className="w-full h-[340px] object-cover rounded-3xl"
+                      unoptimized
+                    />
+                    {/* Income badge */}
+                    <div className="absolute top-4 -left-1/5 rounded-br-none! bg-[#203828] text-white rounded-2xl px-4 py-3 leading-tight">
+                      <p className="text-[11px] font-medium opacity-80">
+                        Income
+                      </p>
+                      <p className="text-xl font-bold">+ € 50</p>
+                    </div>
+                    {/* Invested badge */}
+                    <div className="absolute bottom-4 left-4 bg-white rounded-full px-3.5 py-1.5 shadow-md">
+                      <p className="text-[13px] font-semibold text-[#111827]">
+                        Invested €2200
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
-
-              {/* Front image â€” left, smaller, overlapping */}
-              <div className="absolute left-0 bottom-0 w-[48%] z-10">
-                <div className="relative">
-                  <Image
-                    src="/4.jpg"
-                    alt="Property interior"
-                    width={320}
-                    height={268}
-                    className="w-full h-[268px] object-cover rounded-3xl"
-                    unoptimized
-                  />
-                  {/* Invested badge â€” bottom center */}
-                  <div className="absolute bottom-4 left-4 bg-white rounded-full px-3.5 py-1.5 shadow-md whitespace-nowrap">
-                    <p className="text-[13px] font-semibold text-[#111827]">
-                      Invested â‚¬1500
-                    </p>
+                {/* Front image — left, smaller */}
+                <div className="absolute left-0 bottom-0 w-[48%] z-10">
+                  <div className="relative">
+                    <Image
+                      src="/4.jpg"
+                      alt="Property interior"
+                      width={320}
+                      height={268}
+                      className="w-full h-[268px] object-cover rounded-3xl"
+                      unoptimized
+                    />
+                    <div className="absolute bottom-4 left-4 bg-white rounded-full px-3.5 py-1.5 shadow-md whitespace-nowrap">
+                      <p className="text-[13px] font-semibold text-[#111827]">
+                        Invested €1500
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -363,96 +381,110 @@ export default function Page() {
           </div>
         </section>
 
-        {/* Crypto section */}
-        <section className="py-24 px-[7%] bg-white">
-          <div className="grid grid-cols-2 gap-20 items-center mx-auto max-w-7xl">
-            {/* Left — image + floating elements */}
-            <div className="relative h-[500px]">
-              {/* Main photo — right side of column */}
-              <div className="absolute right-0 top-0 bottom-0 w-[73%]">
+        {/* Crypto */}
+        <section className="py-16 md:py-24 px-[7%] bg-white">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-20 items-center mx-auto max-w-7xl">
+            {/* Left — image composition */}
+            <div className="order-2 md:order-1">
+              {/* Mobile: simple image */}
+              <div className="md:hidden">
                 <Image
                   src="/6.jpg"
                   alt="Crypto investor"
-                  width={500}
-                  height={500}
-                  className="w-full h-full object-cover rounded-3xl"
+                  width={600}
+                  height={400}
+                  className="w-full h-64 object-cover rounded-3xl"
                   unoptimized
                 />
               </div>
-
-              {/* Chart card — top-left, overlapping photo */}
-              <div className="absolute top-8 left-0 w-75 bg-white rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.11)] p-4 z-10">
-                <div className="flex items-center gap-2 mb-1.5">
-                  <div className="w-5 h-5 rounded-full bg-[#203828] flex items-center justify-center shrink-0">
-                    <span className="text-white text-[8px] font-bold">Ɛ</span>
+              {/* Desktop: complex floating layout */}
+              <div className="hidden md:block relative h-[500px]">
+                <div className="absolute right-0 top-0 bottom-0 w-[73%]">
+                  <Image
+                    src="/6.jpg"
+                    alt="Crypto investor"
+                    width={500}
+                    height={500}
+                    className="w-full h-full object-cover rounded-3xl"
+                    unoptimized
+                  />
+                </div>
+                {/* Chart card */}
+                <div className="absolute top-8 left-0 w-75 bg-white rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.11)] p-4 z-10">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <div className="w-5 h-5 rounded-full bg-[#203828] flex items-center justify-center shrink-0">
+                      <span className="text-white text-[8px] font-bold">Ɛ</span>
+                    </div>
+                    <span className="text-[11px] text-[#9ca3af]">
+                      Current value
+                    </span>
                   </div>
-                  <span className="text-[11px] text-[#9ca3af]">
-                    Current value
+                  <p className="text-[17px] font-bold text-[#111827] mb-2.5">
+                    € 510.00
+                  </p>
+                  <svg
+                    viewBox="0 0 180 60"
+                    className="w-full h-[60px]"
+                    aria-hidden="true"
+                  >
+                    <defs>
+                      <linearGradient id="cg" x1="0" y1="0" x2="0" y2="1">
+                        <stop
+                          offset="0%"
+                          stopColor="#35de8d"
+                          stopOpacity="0.22"
+                        />
+                        <stop
+                          offset="100%"
+                          stopColor="#35de8d"
+                          stopOpacity="0"
+                        />
+                      </linearGradient>
+                    </defs>
+                    <path
+                      d="M0,56 C8,54 14,48 22,42 C30,36 36,40 44,32 C52,24 58,28 66,20 C74,13 80,17 88,11 C96,5 104,8 112,4 C120,1 130,2 140,1 C152,0 164,1 180,0"
+                      fill="none"
+                      stroke="#35de8d"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d="M0,56 C8,54 14,48 22,42 C30,36 36,40 44,32 C52,24 58,28 66,20 C74,13 80,17 88,11 C96,5 104,8 112,4 C120,1 130,2 140,1 C152,0 164,1 180,0 L180,60 L0,60 Z"
+                      fill="url(#cg)"
+                    />
+                  </svg>
+                  <div className="flex justify-between mt-1.5">
+                    {["Jan", "May", "Sep", "Jan"].map((l) => (
+                      <span key={l} className="text-[9px] text-[#9ca3af]">
+                        {l}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                {/* Bitcoin badge */}
+                <div className="absolute bottom-12 left-24 z-10 flex items-center gap-2 bg-white rounded-full pl-1.5 pr-4 py-1.5 shadow-[0_4px_16px_rgba(0,0,0,0.13)]">
+                  <div className="w-8 h-8 rounded-full bg-[#f7931a] flex items-center justify-center shrink-0">
+                    <span className="text-white font-bold text-[13px]">₿</span>
+                  </div>
+                  <span className="text-[13px] font-semibold text-[#111827]">
+                    Bitcoin
                   </span>
                 </div>
-                <p className="text-[17px] font-bold text-[#111827] mb-2.5">
-                  € 510.00
-                </p>
-                <svg
-                  viewBox="0 0 180 60"
-                  className="w-full h-[60px]"
-                  aria-hidden="true"
-                >
-                  <defs>
-                    <linearGradient id="cg" x1="0" y1="0" x2="0" y2="1">
-                      <stop
-                        offset="0%"
-                        stopColor="#35de8d"
-                        stopOpacity="0.22"
-                      />
-                      <stop offset="100%" stopColor="#35de8d" stopOpacity="0" />
-                    </linearGradient>
-                  </defs>
-                  <path
-                    d="M0,56 C8,54 14,48 22,42 C30,36 36,40 44,32 C52,24 58,28 66,20 C74,13 80,17 88,11 C96,5 104,8 112,4 C120,1 130,2 140,1 C152,0 164,1 180,0"
-                    fill="none"
-                    stroke="#35de8d"
-                    strokeWidth="1.8"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M0,56 C8,54 14,48 22,42 C30,36 36,40 44,32 C52,24 58,28 66,20 C74,13 80,17 88,11 C96,5 104,8 112,4 C120,1 130,2 140,1 C152,0 164,1 180,0 L180,60 L0,60 Z"
-                    fill="url(#cg)"
-                  />
-                </svg>
-                <div className="flex justify-between mt-1.5">
-                  {["Jan", "May", "Sep", "Jan"].map((l) => (
-                    <span key={l} className="text-[9px] text-[#9ca3af]">
-                      {l}
-                    </span>
-                  ))}
+                {/* Ethereum badge */}
+                <div className="absolute right-[-6px] top-[44%] z-10 flex items-center gap-2 bg-white rounded-full pl-1.5 pr-4 py-1.5 shadow-[0_4px_16px_rgba(0,0,0,0.13)]">
+                  <div className="w-8 h-8 rounded-full bg-[#627eea] flex items-center justify-center shrink-0">
+                    <span className="text-white font-bold text-[12px]">Ξ</span>
+                  </div>
+                  <span className="text-[13px] font-semibold text-[#111827]">
+                    Ethereum
+                  </span>
                 </div>
-              </div>
-
-              {/* Bitcoin badge — bottom-left */}
-              <div className="absolute bottom-12 left-24 z-10 flex items-center gap-2 bg-white rounded-full pl-1.5 pr-4 py-1.5 shadow-[0_4px_16px_rgba(0,0,0,0.13)]">
-                <div className="w-8 h-8 rounded-full bg-[#f7931a] flex items-center justify-center shrink-0">
-                  <span className="text-white font-bold text-[13px]">₿</span>
-                </div>
-                <span className="text-[13px] font-semibold text-[#111827]">
-                  Bitcoin
-                </span>
-              </div>
-
-              {/* Ethereum badge — right-center */}
-              <div className="absolute right-[-6px] top-[44%] z-10 flex items-center gap-2 bg-white rounded-full pl-1.5 pr-4 py-1.5 shadow-[0_4px_16px_rgba(0,0,0,0.13)]">
-                <div className="w-8 h-8 rounded-full bg-[#627eea] flex items-center justify-center shrink-0">
-                  <span className="text-white font-bold text-[12px]">Ξ</span>
-                </div>
-                <span className="text-[13px] font-semibold text-[#111827]">
-                  Ethereum
-                </span>
               </div>
             </div>
 
             {/* Right — text */}
-            <div>
+            <div className="order-1 md:order-2">
               <div className="flex items-center gap-2 mb-5">
                 <Coins size={15} className="text-[#6b7280]" />
                 <span className="text-[#6b7280] text-sm font-medium">
@@ -462,7 +494,7 @@ export default function Page() {
                   NEW
                 </span>
               </div>
-              <h2 className="text-[3rem] font-bold text-[#111827] leading-[1.1] mb-5">
+              <h2 className="text-[2.2rem] md:text-[3rem] font-bold text-[#111827] leading-[1.1] mb-5">
                 Straightforward
                 <br />
                 crypto investing
@@ -482,8 +514,8 @@ export default function Page() {
         </section>
 
         {/* ETFs + Smart Cash cards */}
-        <section className="py-16 px-[7%] bg-white">
-          <div className="grid grid-cols-2 gap-5 mx-auto max-w-7xl">
+        <section className="py-12 md:py-16 px-[7%] bg-white">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mx-auto max-w-7xl">
             {/* ETFs card */}
             <div className="bg-[#f2f2f0] rounded-3xl p-9 flex flex-col">
               <div className="flex items-center justify-between mb-8">
@@ -545,10 +577,10 @@ export default function Page() {
         <InvestYourWay />
 
         {/* Your security first */}
-        <section className="py-24 px-[7%] bg-white">
-          <div className="grid grid-cols-2 gap-20 items-start mx-auto max-w-7xl">
+        <section className="py-16 md:py-24 px-[7%] bg-white">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-20 items-start mx-auto max-w-7xl">
             <div>
-              <h2 className="text-[2.6rem] font-bold text-[#111827] leading-tight mb-4">
+              <h2 className="text-[2rem] md:text-[2.6rem] font-bold text-[#111827] leading-tight mb-4">
                 Your security first.
               </h2>
               <p className="text-[#6b7280] text-[15px] leading-relaxed mb-8 max-w-[380px]">
@@ -604,11 +636,11 @@ export default function Page() {
         </section>
 
         {/* Trusted by 700k+ */}
-        <section className="py-24 px-[7%] bg-white border-t border-[#f0f0ef]">
-          <div className="mx-auto max-w-7xl grid grid-cols-2 gap-20 items-start">
+        <section className="py-16 md:py-24 px-[7%] bg-white border-t border-[#f0f0ef]">
+          <div className="mx-auto max-w-7xl grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-20 items-start">
             {/* Left — big heading */}
             <div>
-              <h2 className="text-[3.5rem] font-black text-[#111827] leading-[1.05]">
+              <h2 className="text-[2.5rem] md:text-[3.5rem] font-black text-[#111827] leading-[1.05]">
                 Trusted by 700k+
                 <br />
                 registered users
@@ -679,10 +711,10 @@ export default function Page() {
         </section>
 
         {/* We're here to help */}
-        <section className="py-24 px-[7%] bg-white">
-          <div className="grid grid-cols-2 gap-20 items-center mx-auto max-w-7xl">
+        <section className="py-16 md:py-24 px-[7%] bg-white">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-20 items-center mx-auto max-w-7xl">
             <div>
-              <h2 className="text-[2.6rem] font-bold text-[#111827] leading-tight mb-4">
+              <h2 className="text-[2rem] md:text-[2.6rem] font-bold text-[#111827] leading-tight mb-4">
                 We&apos;re here to help.
                 <br />
                 Not sell.
@@ -726,9 +758,9 @@ export default function Page() {
         </section>
 
         {/* CTA dark */}
-        <section className="py-24 px-[7%] bg-[#203828]">
+        <section className="py-16 md:py-24 px-[7%] bg-[#203828]">
           <div className="mx-auto max-w-3xl text-center">
-            <h2 className="text-[3rem] font-bold text-white leading-[1.1] mb-4">
+            <h2 className="text-[2.2rem] md:text-[3rem] font-bold text-white leading-[1.1] mb-4">
               Get more out of your money.
             </h2>
             <p className="text-white/55 text-base mb-8 max-w-md mx-auto leading-relaxed">
@@ -748,8 +780,8 @@ export default function Page() {
         </section>
 
         {/* FAQ */}
-        <section className="py-24 px-[7%] bg-white" id="faq">
-          <div className="mx-auto max-w-7xl grid grid-cols-[280px_1fr] gap-20">
+        <section className="py-16 md:py-24 px-[7%] bg-white" id="faq">
+          <div className="mx-auto max-w-7xl grid grid-cols-1 md:grid-cols-[280px_1fr] gap-8 md:gap-20">
             <div>
               <h2 className="text-[2rem] font-bold text-[#111827] tracking-tight mb-3">
                 Frequently Asked Questions
@@ -811,8 +843,8 @@ export default function Page() {
       {/* Footer */}
       <footer className="bg-white min-h-[100dvh] flex flex-col border-t border-[#f0f0ef]">
         {/* Main link columns */}
-        <div className="flex-1 mx-auto container w-full px-[7%] pt-20">
-          <div className="grid grid-cols-4 gap-12">
+        <div className="flex-1 mx-auto container w-full px-[7%] pt-16 md:pt-20">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
             {/* Investing */}
             <div>
               <p className="font-bold text-[#111827] text-sm mb-6">Investing</p>
@@ -963,7 +995,7 @@ export default function Page() {
         {/* Bottom legal section */}
         <div className="border-t border-[#e5e7eb] flex-1">
           <div className="mx-auto container px-[7%] py-10">
-            <div className="flex items-center gap-8 mb-6">
+            <div className="flex flex-wrap gap-4 md:gap-8 mb-6">
               {[
                 "Legal documents",
                 "Imprint",
