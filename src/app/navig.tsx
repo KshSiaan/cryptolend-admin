@@ -7,7 +7,11 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-const NAV_LINKS = ["Invest", "Smart Cash", "Security", "Learn", "About"];
+const NAV_LINKS: { label: string; href: string }[] = [
+  { label: "Invest", href: "/app/invest" },
+  { label: "Security", href: "/security" },
+  { label: "About", href: "/about" },
+];
 
 export default function Navig() {
   const [scrolled, setScrolled] = useState(false);
@@ -40,7 +44,7 @@ export default function Navig() {
           </Link>
           {/* Desktop nav links */}
           <div className="hidden md:flex items-center gap-6 text-sm">
-            {NAV_LINKS.map((label) => (
+            {NAV_LINKS.map(({ label, href }) => (
               <Link
                 key={label}
                 className={cn(
@@ -49,7 +53,7 @@ export default function Navig() {
                     ? "text-[#111827] hover:text-[#111827]/70"
                     : "text-white hover:text-white/80",
                 )}
-                href="/invest"
+                href={href}
               >
                 {label}
               </Link>
@@ -100,10 +104,10 @@ export default function Navig() {
             scrolled ? "bg-white border-b border-[#f0f0ef]" : "bg-[#203828]",
           )}
         >
-          {NAV_LINKS.map((label) => (
+          {NAV_LINKS.map(({ label, href }) => (
             <Link
               key={label}
-              href="/invest"
+              href={href}
               className={cn(
                 "font-semibold px-4 py-3 rounded-lg text-sm transition-colors",
                 scrolled

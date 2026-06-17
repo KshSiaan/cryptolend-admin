@@ -20,6 +20,7 @@ import {
   Wifi,
 } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
 import { HeroCard } from "@/components/hero-card";
 import { InvestYourWay } from "@/components/invest-your-way";
@@ -47,14 +48,18 @@ export default function Page() {
               Build wealth with confidence
             </h1>
             <p className="text-center text-white">
-              Investing designed to meet your ambition, all in one place.
+              Peer-to-peer lending on the Solana blockchain — lend directly to
+              verified borrowers and earn attractive returns, all automated via
+              smart contracts.
             </p>
-            <Button
-              className="w-min mx-auto px-6 py-6 bg-[#35de8d] hover:bg-[#35de8d]/90 text-foreground font-semibold"
-              size="lg"
-            >
-              Get started
-            </Button>
+            <Link href="/auth/register">
+              <Button
+                className="w-min mx-auto px-6 py-6 bg-[#35de8d] hover:bg-[#35de8d]/90 text-foreground font-semibold"
+                size="lg"
+              >
+                Get started
+              </Button>
+            </Link>
           </div>
           {/* Right HeroCard — desktop only */}
           <div className="hidden md:block">
@@ -63,13 +68,13 @@ export default function Page() {
         </div>
         <div className="text-center py-6 md:py-8 flex flex-col md:flex-row justify-center items-center gap-3 md:gap-[7%] text-background font-medium text-sm md:text-base px-4">
           <h3 className="flex items-center gap-2">
-            <CheckIcon size={16} /> Trusted by 700k+ registered users
+            <CheckIcon size={16} /> Trusted by 500k+ registered users
           </h3>
           <h3 className="flex items-center gap-2">
-            <CheckIcon size={16} /> €800 m+ assets under management
+            <CheckIcon size={16} /> €600M+ in total loan volume
           </h3>
           <h3 className="flex items-center gap-2">
-            <CheckIcon size={16} /> Licensed investment firm under MiFID
+            <CheckIcon size={16} /> 100% on-chain via Solana smart contracts
           </h3>
         </div>
       </header>
@@ -84,9 +89,10 @@ export default function Page() {
                 For your financial future
               </h2>
               <p className="text-[#6b7280] text-[15px] leading-relaxed mb-10 max-w-[420px]">
-                Grow your long-term wealth with flexible investments. Whether
-                you&apos;re just starting out or are more experienced, we make
-                investing simple.
+                Grow your wealth by lending directly to verified private
+                individuals and businesses on the Solana blockchain. Everything
+                runs automatically via smart contracts — no banks, no
+                middlemen.
               </p>
               <div className="space-y-10 md:space-y-16">
                 <div className="flex items-start gap-4">
@@ -98,8 +104,8 @@ export default function Page() {
                       Income-generating investments
                     </p>
                     <p className="text-[#6b7280] text-[14px] leading-relaxed">
-                      Earn regular returns from loans, bonds, real estate, and
-                      more.
+                      Lend to verified borrowers and earn monthly interest
+                      payments, automatically distributed by smart contracts.
                     </p>
                   </div>
                 </div>
@@ -112,8 +118,8 @@ export default function Page() {
                       Full flexibility
                     </p>
                     <p className="text-[#6b7280] text-[14px] leading-relaxed">
-                      Get your money when you need it by cashing out or selling
-                      investments.
+                      Withdraw your uninvested balance anytime. Active loans run
+                      to maturity per the agreed schedule.
                     </p>
                   </div>
                 </div>
@@ -126,7 +132,8 @@ export default function Page() {
                       Low barriers
                     </p>
                     <p className="text-[#6b7280] text-[14px] leading-relaxed">
-                      Start from just €50, with low and transparent fees.
+                      Start lending from just €50 in a few clicks. Low, fully
+                      transparent fees — no hidden costs.
                     </p>
                   </div>
                 </div>
@@ -139,8 +146,9 @@ export default function Page() {
                       Trusted and licenced
                     </p>
                     <p className="text-[#6b7280] text-[14px] leading-relaxed">
-                      600k+ registered users and authorized to provide
-                      investment services across the EU.
+                      500k+ registered users trust Solbridge Capital. All
+                      transactions are publicly verifiable on the Solana
+                      blockchain.
                     </p>
                   </div>
                 </div>
@@ -177,9 +185,10 @@ export default function Page() {
                 day one
               </h2>
               <p className="text-[#6b7280] text-[15px] leading-relaxed mb-8 max-w-[420px]">
-                Loans can offer competitive investment returns compared to
-                traditional asset classes. Start confidently on Europe&apos;s
-                leading platform for loan investments.
+                Lend directly to verified private individuals and businesses via
+                smart contracts on Solana. Earn competitive interest compared to
+                traditional savings — with monthly repayments credited
+                automatically to your account.
               </p>
               <button
                 type="button"
@@ -194,9 +203,9 @@ export default function Page() {
         </section>
 
         {/* Bonds */}
-        <section className="py-16 md:py-24 px-[7%] bg-white">
+        {/* <section className="py-16 md:py-24 px-[7%] bg-white">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-20 items-center mx-auto max-w-7xl relative">
-            {/* Left — image + floating card */}
+      
             <div className="relative order-2 md:order-1">
               <Image
                 src="/3.jpg"
@@ -206,7 +215,6 @@ export default function Page() {
                 className="w-full md:w-[68%] h-64 md:h-[440px] object-cover rounded-3xl"
                 unoptimized
               />
-              {/* Floating bond list card — desktop only */}
               <div className="hidden md:block absolute right-0 top-[-60%] translate-y-1/2 w-[58%] bg-white rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.10)] overflow-hidden">
                 {[
                   {
@@ -263,8 +271,6 @@ export default function Page() {
                 ))}
               </div>
             </div>
-
-            {/* Right — text */}
             <div className="order-1 md:order-2">
               <div className="flex items-center gap-2 mb-5">
                 <LayoutList size={15} className="text-[#6b7280]" />
@@ -287,12 +293,12 @@ export default function Page() {
               </button>
             </div>
           </div>
-        </section>
+        </section> */}
 
         {/* Real estate */}
-        <section className="py-16 md:py-24 px-[7%] bg-white">
+        {/* <section className="py-16 md:py-24 px-[7%] bg-white">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-20 items-center mx-auto max-w-7xl">
-            {/* Left — text */}
+     
             <div>
               <div className="flex items-center gap-2 mb-5">
                 <Building2 size={15} className="text-[#6b7280]" />
@@ -317,9 +323,9 @@ export default function Page() {
               </button>
             </div>
 
-            {/* Right — images */}
+  
             <div>
-              {/* Mobile: single image */}
+            
               <div className="md:hidden">
                 <Image
                   src="/5.jpg"
@@ -330,9 +336,9 @@ export default function Page() {
                   unoptimized
                 />
               </div>
-              {/* Desktop: staggered composition */}
+          
               <div className="hidden md:block relative h-[420px]">
-                {/* Back image — right, taller */}
+           
                 <div className="absolute right-0 top-0 w-[57%]">
                   <div className="relative">
                     <Image
@@ -343,14 +349,14 @@ export default function Page() {
                       className="w-full h-[340px] object-cover rounded-3xl"
                       unoptimized
                     />
-                    {/* Income badge */}
+                  
                     <div className="absolute top-4 -left-1/5 rounded-br-none! bg-[#203828] text-white rounded-2xl px-4 py-3 leading-tight">
                       <p className="text-[11px] font-medium opacity-80">
                         Income
                       </p>
                       <p className="text-xl font-bold">+ € 50</p>
                     </div>
-                    {/* Invested badge */}
+        
                     <div className="absolute bottom-4 left-4 bg-white rounded-full px-3.5 py-1.5 shadow-md">
                       <p className="text-[13px] font-semibold text-[#111827]">
                         Invested €2200
@@ -358,7 +364,7 @@ export default function Page() {
                     </div>
                   </div>
                 </div>
-                {/* Front image — left, smaller */}
+         
                 <div className="absolute left-0 bottom-0 w-[48%] z-10">
                   <div className="relative">
                     <Image
@@ -380,13 +386,14 @@ export default function Page() {
             </div>
           </div>
         </section>
+         */}
 
         {/* Crypto */}
-        <section className="py-16 md:py-24 px-[7%] bg-white">
+        {/* <section className="py-16 md:py-24 px-[7%] bg-white">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-20 items-center mx-auto max-w-7xl">
-            {/* Left — image composition */}
+        
             <div className="order-2 md:order-1">
-              {/* Mobile: simple image */}
+           
               <div className="md:hidden">
                 <Image
                   src="/6.jpg"
@@ -397,7 +404,7 @@ export default function Page() {
                   unoptimized
                 />
               </div>
-              {/* Desktop: complex floating layout */}
+             
               <div className="hidden md:block relative h-[500px]">
                 <div className="absolute right-0 top-0 bottom-0 w-[73%]">
                   <Image
@@ -409,7 +416,7 @@ export default function Page() {
                     unoptimized
                   />
                 </div>
-                {/* Chart card */}
+      
                 <div className="absolute top-8 left-0 w-75 bg-white rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.11)] p-4 z-10">
                   <div className="flex items-center gap-2 mb-1.5">
                     <div className="w-5 h-5 rounded-full bg-[#203828] flex items-center justify-center shrink-0">
@@ -462,7 +469,7 @@ export default function Page() {
                     ))}
                   </div>
                 </div>
-                {/* Bitcoin badge */}
+               
                 <div className="absolute bottom-12 left-24 z-10 flex items-center gap-2 bg-white rounded-full pl-1.5 pr-4 py-1.5 shadow-[0_4px_16px_rgba(0,0,0,0.13)]">
                   <div className="w-8 h-8 rounded-full bg-[#f7931a] flex items-center justify-center shrink-0">
                     <span className="text-white font-bold text-[13px]">₿</span>
@@ -471,7 +478,7 @@ export default function Page() {
                     Bitcoin
                   </span>
                 </div>
-                {/* Ethereum badge */}
+                
                 <div className="absolute right-[-6px] top-[44%] z-10 flex items-center gap-2 bg-white rounded-full pl-1.5 pr-4 py-1.5 shadow-[0_4px_16px_rgba(0,0,0,0.13)]">
                   <div className="w-8 h-8 rounded-full bg-[#627eea] flex items-center justify-center shrink-0">
                     <span className="text-white font-bold text-[12px]">Ξ</span>
@@ -483,7 +490,7 @@ export default function Page() {
               </div>
             </div>
 
-            {/* Right — text */}
+           
             <div className="order-1 md:order-2">
               <div className="flex items-center gap-2 mb-5">
                 <Coins size={15} className="text-[#6b7280]" />
@@ -511,12 +518,12 @@ export default function Page() {
               </button>
             </div>
           </div>
-        </section>
+        </section> */}
 
         {/* ETFs + Smart Cash cards */}
-        <section className="py-12 md:py-16 px-[7%] bg-white">
+        {/* <section className="py-12 md:py-16 px-[7%] bg-white">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mx-auto max-w-7xl">
-            {/* ETFs card */}
+           
             <div className="bg-[#f2f2f0] rounded-3xl p-9 flex flex-col">
               <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center gap-2">
@@ -544,7 +551,7 @@ export default function Page() {
               </button>
             </div>
 
-            {/* Smart Cash card */}
+          
             <div className="bg-[#f2f2f0] rounded-3xl p-9 flex flex-col">
               <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center gap-2">
@@ -572,7 +579,7 @@ export default function Page() {
               </button>
             </div>
           </div>
-        </section>
+        </section> */}
 
         <InvestYourWay />
 
@@ -584,37 +591,39 @@ export default function Page() {
                 Your security first.
               </h2>
               <p className="text-[#6b7280] text-[15px] leading-relaxed mb-8 max-w-[380px]">
-                Every mechanism is designed to protect your capital — from KYC
-                verification to settlement and beyond.
+                All capital is held exclusively in Solana smart contracts —
+                Solbridge never touches your funds. Every transaction is
+                publicly verifiable on-chain, with automated repayments and
+                rigorous borrower credit checks.
               </p>
-              <button
-                type="button"
-                className="border border-[#111827] text-[#111827] text-sm font-medium px-5 py-2.5 rounded-lg hover:bg-[#111827] hover:text-white transition-colors"
+              <Link
+                href="/security"
+                className="inline-block border border-[#111827] text-[#111827] text-sm font-medium px-5 py-2.5 rounded-lg hover:bg-[#111827] hover:text-white transition-colors"
               >
                 Security overview
-              </button>
+              </Link>
             </div>
             <div className="space-y-6">
               {[
                 {
                   Icon: ShieldCheck,
-                  title: "Licensed and regulated",
-                  desc: "Solbridge Capital operates under applicable financial regulations. All accounts are subject to KYC and AML compliance checks.",
+                  title: "Blockchain transparency",
+                  desc: "All transactions on Solana are publicly visible, immutable, and tamper-proof. Every repayment and interest flow is traceable by anyone, anytime.",
                 },
                 {
                   Icon: Lock,
-                  title: "Investor protection",
-                  desc: "Your invested funds are held in segregated accounts, fully separated from company funds at all times.",
+                  title: "Smart contract security",
+                  desc: "Your funds are managed exclusively via Solana smart contracts. Solbridge Capital has zero access to your capital at any point.",
                 },
                 {
                   Icon: BadgeCheck,
-                  title: "Secured investments",
-                  desc: "Every loan is backed by physical or IP collateral, evaluated and verified before listing on the platform.",
+                  title: "Rigorous borrower vetting",
+                  desc: "Every borrower is assessed for creditworthiness and repayment capacity before admission. Loans are assigned clear risk classes.",
                 },
                 {
                   Icon: Eye,
-                  title: "Your data, protected",
-                  desc: "End-to-end encryption, zero third-party data sales, and full GDPR compliance across all operations.",
+                  title: "Full on-chain auditability",
+                  desc: "Every transaction can be verified directly on the Solana blockchain. Regular platform reports cover performance, default rates, and interest trends.",
                 },
               ].map(({ Icon, title, desc }) => (
                 <div key={title} className="flex gap-4">
@@ -641,7 +650,7 @@ export default function Page() {
             {/* Left — big heading */}
             <div>
               <h2 className="text-[2.5rem] md:text-[3.5rem] font-black text-[#111827] leading-[1.05]">
-                Trusted by 700k+
+                Trusted by 500k+
                 <br />
                 registered users
               </h2>
@@ -764,15 +773,15 @@ export default function Page() {
               Get more out of your money.
             </h2>
             <p className="text-white/55 text-base mb-8 max-w-md mx-auto leading-relaxed">
-              Your returns are waiting. Join 700k+ investors already earning
-              returns on verified investments.
+              Join 500k+ lenders already earning passive income by lending
+              directly on the Solana blockchain — no banks, no middlemen.
             </p>
-            <button
-              type="button"
-              className="bg-[#35de8d] text-[#111827] font-bold text-base px-8 py-4 rounded-xl hover:bg-[#35de8d]/90 transition-colors"
+            <Link
+              href="/auth/register"
+              className="inline-block bg-[#35de8d] text-[#111827] font-bold text-base px-8 py-4 rounded-xl hover:bg-[#35de8d]/90 transition-colors"
             >
               Start investing free
-            </button>
+            </Link>
             <p className="text-xs text-white/30 mt-4">
               No fees to join · Minimum €50 · Withdraw anytime
             </p>
@@ -797,27 +806,27 @@ export default function Page() {
               {[
                 {
                   q: "What is a loan investment on Solbridge Capital?",
-                  a: "You lend funds to verified borrowers through our platform. Borrowers repay principal + interest monthly, and those repayments are credited to your account.",
+                  a: "You lend funds directly to verified borrowers via smart contracts on the Solana blockchain. Borrowers repay principal and interest monthly — repayments are automatically credited to your account by the smart contract, with no manual processing.",
                 },
                 {
                   q: "What types of investments are available?",
-                  a: "Loans, bonds, real estate, crypto ETPs, ETFs, and Smart Cash — each with different return profiles, durations, and risk grades.",
+                  a: "Solbridge Capital specializes in peer-to-peer loans across multiple risk categories — private individual loans, SME loans, and more. Each loan shows its term, interest rate, and risk class clearly before you invest.",
                 },
                 {
                   q: "How do I start investing?",
-                  a: "Create an account, complete KYC, deposit funds, then browse available investments and start from as little as €50.",
+                  a: "Create an account, complete identity verification (KYC), deposit funds, then browse available loan listings and start lending from as little as €50. The entire process takes just a few minutes.",
                 },
                 {
                   q: "How much can I earn?",
-                  a: "Returns range from 9–18% APR depending on investment type and grade. Our platform average is 14.2% net APR over the last 12 months.",
+                  a: "Returns depend on loan risk class and term. Higher risk classes offer higher interest rates. We recommend diversifying across multiple loans to balance risk and return.",
                 },
                 {
                   q: "Can I withdraw my money at any time?",
-                  a: "Your uninvested balance can be withdrawn anytime. Active investments run to maturity per the investment schedule.",
+                  a: "Your uninvested balance is available for withdrawal at any time. Funds committed to active loans are locked until the borrower completes repayment per the agreed schedule.",
                 },
                 {
                   q: "How does Solbridge Capital generate passive income?",
-                  a: "Monthly repayments compound over time. Reinvesting returns accelerates growth — many investors reach full passive income within 12–24 months.",
+                  a: "Monthly repayments of principal and interest are automatically distributed by smart contracts. By reinvesting repayments into new loans, compound growth accelerates over time — fully automated.",
                 },
               ].map(({ q, a }) => (
                 <details key={q} className="group py-5">
@@ -874,18 +883,18 @@ export default function Page() {
               <p className="font-bold text-[#111827] text-sm mb-6">Company</p>
               <ul className="space-y-3.5">
                 {[
-                  "About us",
-                  "Careers",
-                  "Affiliate program",
-                  "Media Center",
-                  "Investor relations",
-                ].map((l) => (
-                  <li key={l}>
+                  { label: "About us", href: "/about" },
+                  { label: "Careers", href: "/" },
+                  { label: "Affiliate program", href: "/" },
+                  { label: "Media Center", href: "/" },
+                  { label: "Investor relations", href: "/" },
+                ].map(({ label, href }) => (
+                  <li key={label}>
                     <a
-                      href="/"
+                      href={href}
                       className="text-[#6b7280] text-[13px] hover:text-[#111827] transition-colors"
                     >
-                      {l}
+                      {label}
                     </a>
                   </li>
                 ))}
@@ -898,18 +907,18 @@ export default function Page() {
               </p>
               <ul className="space-y-3.5">
                 {[
-                  "Blog",
-                  "Help Center",
-                  "Investor protection on Solbridge Capital",
-                  "Solbridge Capital Risk Score",
-                  "Solbridge Capital Community",
-                ].map((l) => (
-                  <li key={l}>
+                  { label: "Blog", href: "/" },
+                  { label: "Help Center", href: "/#faq" },
+                  { label: "Investor protection on Solbridge Capital", href: "/security" },
+                  { label: "Solbridge Capital Risk Score", href: "/security" },
+                  { label: "Solbridge Capital Community", href: "/" },
+                ].map(({ label, href }) => (
+                  <li key={label}>
                     <a
-                      href="/"
+                      href={href}
                       className="text-[#6b7280] text-[13px] hover:text-[#111827] transition-colors"
                     >
-                      {l}
+                      {label}
                     </a>
                   </li>
                 ))}
@@ -1012,25 +1021,26 @@ export default function Page() {
             </div>
             <div className="space-y-3 text-[12px] text-[#9ca3af] leading-relaxed max-w-4xl">
               <p>
-                Solbridge Capital (registration no. 40103903643, legal address:
-                Skanstes iela 50, Riga, LV – 1013, Latvia) is an investment firm
-                licensed and supervised by Latvijas Banka, the central bank of
-                Latvia.
+                Solbridge Capital is a decentralized peer-to-peer lending
+                platform operating on the Solana blockchain. All loan
+                transactions are executed via audited smart contracts. Solbridge
+                Capital does not hold, manage, or have access to investor funds
+                at any point — capital flows directly between lenders and
+                borrowers on-chain.
               </p>
               <p>
-                Solbridge Capital is a member of the national investor
-                compensation scheme established under Directive 97/9/EC. The
-                scheme provides compensation if Solbridge Capital fails to
-                return financial instruments or cash to investors. The
-                compensation is limited to the outstanding liabilities, up to
-                €20 000. The scheme doesn&apos;t compensate for losses due to
-                changes in the price or liquidity of financial instruments.
+                Lending on Solbridge Capital involves risk. These risks include
+                borrower default, liquidity risk, and general market risks. The
+                platform does not provide capital protection or guarantee
+                returns. We recommend diversifying your lending portfolio across
+                multiple loans and risk classes to minimize exposure to
+                individual defaults.
               </p>
               <p>
-                Investing involves risks. The value of your investment may fall
-                or rise, and you may lose invested capital. Past performance,
-                forecasts, or simulations don&apos;t guarantee future
-                performance. Please refer to our risk information.
+                Past performance, forecasts, or simulations do not guarantee
+                future results. Please invest only amounts whose potential loss
+                you can bear. For full risk information, please refer to our
+                Terms of Service and Risk Disclosure documents.
               </p>
             </div>
             <p className="text-[12px] text-[#9ca3af] mt-5">
