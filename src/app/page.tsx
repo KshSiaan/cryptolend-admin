@@ -52,14 +52,16 @@ export default function Page() {
               verified borrowers and earn attractive returns, all automated via
               smart contracts.
             </p>
-            <Link href="/auth/register">
-              <Button
-                className="w-min mx-auto px-6 py-6 bg-[#35de8d] hover:bg-[#35de8d]/90 text-foreground font-semibold"
-                size="lg"
-              >
-                Get started
-              </Button>
-            </Link>
+            <div className="w-full flex justify-center items-center">
+              <Link href="/auth/register">
+                <Button
+                  className="w-min mx-auto px-6 py-6 bg-[#35de8d] hover:bg-[#35de8d]/90 text-foreground font-semibold"
+                  size="lg"
+                >
+                  Get started
+                </Button>
+              </Link>
+            </div>
           </div>
           {/* Right HeroCard — desktop only */}
           <div className="hidden md:block">
@@ -91,8 +93,7 @@ export default function Page() {
               <p className="text-[#6b7280] text-[15px] leading-relaxed mb-10 max-w-[420px]">
                 Grow your wealth by lending directly to verified private
                 individuals and businesses on the Solana blockchain. Everything
-                runs automatically via smart contracts — no banks, no
-                middlemen.
+                runs automatically via smart contracts — no banks, no middlemen.
               </p>
               <div className="space-y-10 md:space-y-16">
                 <div className="flex items-start gap-4">
@@ -909,7 +910,10 @@ export default function Page() {
                 {[
                   { label: "Blog", href: "/" },
                   { label: "Help Center", href: "/#faq" },
-                  { label: "Investor protection on Solbridge Capital", href: "/security" },
+                  {
+                    label: "Investor protection on Solbridge Capital",
+                    href: "/security",
+                  },
                   { label: "Solbridge Capital Risk Score", href: "/security" },
                   { label: "Solbridge Capital Community", href: "/" },
                 ].map(({ label, href }) => (
