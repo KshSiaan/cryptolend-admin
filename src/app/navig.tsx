@@ -63,23 +63,27 @@ export default function Navig() {
 
         {/* Desktop buttons */}
         <div className="hidden md:flex items-center gap-4">
-          <Button
-            variant="outline"
-            className={cn(
-              "font-semibold bg-transparent! transition-colors",
-              scrolled
-                ? "text-[#111827] border-[#111827] hover:text-[#111827]/80"
-                : "text-white border-white hover:text-white/80",
-            )}
-          >
-            Log in
-          </Button>
-          <Button
-            className="px-4 bg-[#35de8d] hover:bg-[#35de8d]/90 text-foreground font-semibold"
-            size="lg"
-          >
-            Create account
-          </Button>
+          <Link href="/auth/login">
+            <Button
+              variant="outline"
+              className={cn(
+                "font-semibold bg-transparent! transition-colors",
+                scrolled
+                  ? "text-[#111827] border-[#111827] hover:text-[#111827]/80"
+                  : "text-white border-white hover:text-white/80",
+              )}
+            >
+              Log in
+            </Button>
+          </Link>
+          <Link href="/auth/register">
+            <Button
+              className="px-4 bg-[#35de8d] hover:bg-[#35de8d]/90 text-foreground font-semibold"
+              size="lg"
+            >
+              Create account
+            </Button>
+          </Link>
         </div>
 
         {/* Mobile hamburger */}
@@ -125,23 +129,29 @@ export default function Navig() {
               scrolled ? "border-[#e5e7eb]" : "border-white/20",
             )}
           >
-            <Button
-              variant="outline"
-              className={cn(
-                "font-semibold bg-transparent! w-full",
-                scrolled
-                  ? "text-[#111827] border-[#111827]"
-                  : "text-white border-white",
-              )}
-            >
-              Log in
-            </Button>
-            <Button
-              className="w-full bg-[#35de8d] hover:bg-[#35de8d]/90 text-foreground font-semibold"
-              size="lg"
-            >
-              Create account
-            </Button>
+            <Link href="/auth/login" className="w-full">
+              <Button
+                variant="outline"
+                className={cn(
+                  "font-semibold bg-transparent! w-full",
+                  scrolled
+                    ? "text-[#111827] border-[#111827]"
+                    : "text-white border-white",
+                )}
+                onClick={() => setMobileOpen(false)}
+              >
+                Log in
+              </Button>
+            </Link>
+            <Link href="/auth/register" className="w-full">
+              <Button
+                className="w-full bg-[#35de8d] hover:bg-[#35de8d]/90 text-foreground font-semibold"
+                size="lg"
+                onClick={() => setMobileOpen(false)}
+              >
+                Create account
+              </Button>
+            </Link>
           </div>
         </div>
       )}

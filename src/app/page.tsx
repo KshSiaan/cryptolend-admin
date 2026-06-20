@@ -35,8 +35,8 @@ export default function Page() {
           {/* Left image — desktop only */}
           <div className="hidden md:block">
             <Image
-              src="/0.jpg"
-              alt="Image 0"
+              src="/1.jpg"
+              alt="Image 1"
               width={500}
               height={400}
               className="object-cover h-[60dvh] rounded-4xl w-full"
@@ -155,10 +155,9 @@ export default function Page() {
                 </div>
               </div>
             </div>
-            {/* Right */}
             <div>
               <Image
-                src="/1.jpg"
+                src="/100.jpg"
                 alt="Investment app on phone"
                 width={600}
                 height={700}
