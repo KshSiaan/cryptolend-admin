@@ -40,8 +40,21 @@ export default function RegisterPage() {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
+  const validatePassword = (pw: string): string | null => {
+    if (pw.length < 8) return "Password must be at least 8 characters.";
+    if (!/\d/.test(pw)) return "Password must contain at least 1 number.";
+    if (!/[^A-Za-z0-9]/.test(pw))
+      return "Password must contain at least 1 special character.";
+    return null;
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const pwError = validatePassword(form.password);
+    if (pwError) {
+      toast.error(pwError);
+      return;
+    }
     if (form.password !== form.password_confirmation) {
       toast.error("Passwords do not match.");
       return;
@@ -91,7 +104,7 @@ export default function RegisterPage() {
               id="password"
               name="password"
               type="password"
-              placeholder="Min. 8 characters"
+              placeholder="Min. 8 chars, 1 number, 1 special"
               value={form.password}
               onChange={handleChange}
               required
@@ -111,13 +124,20 @@ export default function RegisterPage() {
               autoComplete="new-password"
             />
           </div>
-          <Button type="submit" className="w-full" disabled={mutation.isPending}>
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={mutation.isPending}
+          >
             {mutation.isPending ? "Creating account…" : "Create account"}
           </Button>
         </form>
         <p className="text-center text-sm text-muted-foreground">
           Already have an account?{" "}
-          <Link href="/auth/login" className="font-medium text-foreground hover:underline">
+          <Link
+            href="/auth/login"
+            className="font-medium text-foreground hover:underline"
+          >
             Sign in
           </Link>
         </p>
