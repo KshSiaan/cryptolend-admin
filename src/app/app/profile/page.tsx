@@ -116,7 +116,7 @@ export default function ProfilePage() {
     clearAuth();
     removeCookie("auth_token", { path: "/" });
     toast.success("Logged out.");
-    router.push("/auth/login");
+    window.location.href = "/auth/login";
   };
 
   const initials = profile?.name
