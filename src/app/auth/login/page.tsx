@@ -32,7 +32,8 @@ export default function LoginPage() {
       setAuth(user, token);
       setCookie("auth_token", token, { path: "/", maxAge: 60 * 60 * 24 * 7 });
       toast.success(data.message);
-      router.push(user.role === "admin" ? "/admin/dashboard" : "/app");
+      const validPath = user.role === "admin" ? "/admin/dashboard" : "/app";
+      window.location.href = validPath;
     },
     onError: (err: Error) => {
       toast.error(err.message);
