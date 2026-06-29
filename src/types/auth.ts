@@ -168,7 +168,7 @@ export interface WalletTransaction {
   tx_signature: string | null;
   processed_at: string | null;
   created_at: string;
-  meta: Record<string, unknown>;
+  meta?: { reason?: string; [key: string]: any } | null;
 }
 
 export interface WithdrawalRequest {
@@ -197,6 +197,7 @@ export interface RecentTransaction {
   amount_eur: string;
   processed_at: string;
   created_at: string;
+  meta?: { reason?: string; [key: string]: any } | null;
 }
 
 export interface RecentInvestment {
@@ -341,6 +342,7 @@ export interface AdminTransaction {
   processed_at: string;
   created_at: string;
   tx_signature: string | null;
+  meta?: { reason?: string; [key: string]: any } | null;
 }
 
 export interface AdminTransactionListItem {
@@ -352,6 +354,7 @@ export interface AdminTransactionListItem {
   amount_sol: string;
   amount_eur?: string;
   user: { id: number; name: string; email: string };
+  meta?: { reason?: string; [key: string]: any } | null;
 }
 
 export interface AdminDashboardStats {
