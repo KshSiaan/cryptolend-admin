@@ -431,9 +431,13 @@ export default function UsersPage() {
                       <p className="text-xs text-muted-foreground truncate flex items-center gap-1">
                         {user.email}
                         {user.email_verified_at ? (
-                          <CheckCircle2 className="w-3 h-3 text-green-500" title="Verified" />
+                          <span title="Verified" className="flex items-center">
+                            <CheckCircle2 className="w-3 h-3 text-green-500" />
+                          </span>
                         ) : (
-                          <XCircle className="w-3 h-3 text-red-500" title="Unverified" />
+                          <span title="Unverified" className="flex items-center">
+                            <XCircle className="w-3 h-3 text-red-500" />
+                          </span>
                         )}
                       </p>
                       {user.referred_by && (
