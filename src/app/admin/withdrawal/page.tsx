@@ -170,7 +170,7 @@ function ReviewDialog({
             {[
               { label: "User", value: `${req.user.name}` },
               { label: "Email", value: req.user.email },
-              { label: "Amount", value: `${req.amount_sol} SOL` },
+              { label: "Amount", value: `${req.amount_sol} SOL${req.amount_eur ? ` (≈ ${req.amount_eur} €)` : ""}` },
               { label: "To", value: req.recipient_address },
               { label: "Submitted", value: formatDate(req.created_at) },
               { label: "Status", value: req.status },
@@ -311,10 +311,11 @@ export default function WithdrawalPage() {
                         {req.user.email}
                       </span>
                     </div>
-                    <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
-                      <span className="font-medium text-foreground">
-                        {req.amount_sol} SOL
-                      </span>
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground flex-wrap">
+                      <div className="flex flex-col gap-0.5">
+                        <span className="font-semibold text-foreground">{req.amount_sol} SOL</span>
+                        {req.amount_eur && <span className="text-[10px]">≈ {req.amount_eur} €</span>}
+                      </div>
                       <span className="font-mono">
                         {truncateAddr(req.recipient_address)}
                       </span>

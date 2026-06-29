@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, Clock } from "lucide-react";
@@ -34,9 +34,11 @@ interface WithdrawResponseData {
 export function WithdrawSheet({
   children,
   availableSol = "0",
+  availableEur = "0",
 }: {
   children: React.ReactNode;
   availableSol?: string;
+  availableEur?: string;
 }) {
   const queryClient = useQueryClient();
   const [cookies] = useCookies(["auth_token"]);
@@ -44,11 +46,25 @@ export function WithdrawSheet({
 
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<Step>("form");
+  const [currency, setCurrency] = useState<"sol" | "eur">("sol");
   const [amount, setAmount] = useState("");
   const [address, setAddress] = useState("");
   const [isPending, setIsPending] = useState(false);
+  const [rate, setRate] = useState<number | null>(null);
 
-  const available = parseFloat(availableSol) || 0;
+  useEffect(() => {
+    if (!token) return;
+    howl<ApiResponse<any>>("/market/convert?from=sol&to=eur&amount=1", { token })
+      .then((res) => {
+        const r = parseFloat(res.data?.conversion?.output_amount_eur);
+        if (!isNaN(r)) setRate(r);
+      })
+      .catch(() => {});
+  }, [token]);
+
+  const availableSolVal = parseFloat(availableSol) || 0;
+  const availableEurVal = parseFloat(availableEur) || 0;
+  const available = currency === "sol" ? availableSolVal : availableEurVal;
   const parsedAmount = parseFloat(amount) || 0;
   const balanceAfter = available - parsedAmount;
 
@@ -72,10 +88,14 @@ export function WithdrawSheet({
     if (!token) return;
     setIsPending(true);
     try {
+      const body = currency === "sol" 
+        ? { amount_sol: parsedAmount, recipient_address: address.trim() } 
+        : { amount_eur: parsedAmount, recipient_address: address.trim() };
+
       await howl<ApiResponse<WithdrawResponseData>>("/wallet/withdraw", {
         method: "POST",
         token,
-        body: { amount_sol: parsedAmount, recipient_address: address.trim() },
+        body,
       });
       toast.success("Withdrawal request submitted.");
       void queryClient.invalidateQueries({ queryKey: ["wallet-stats"] });
@@ -116,18 +136,41 @@ export function WithdrawSheet({
             <div className="space-y-4 mb-6">
               <div className="space-y-1.5">
                 <label htmlFor="withdraw-amount" className="text-sm font-medium">
-                  Amount (SOL)
+                  Amount
                 </label>
-                <input
-                  id="withdraw-amount"
-                  type="number"
-                  placeholder="0.00"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-ring"
-                />
+                <div className="flex gap-2">
+                  <input
+                    id="withdraw-amount"
+                    type="number"
+                    placeholder="0.00"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    className="flex-1 rounded-xl border border-border bg-card px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-ring"
+                  />
+                  <select
+                    value={currency}
+                    onChange={(e) => {
+                      const newCurrency = e.target.value as "sol" | "eur";
+                      setCurrency(newCurrency);
+                      if (amount && rate) {
+                        const parsed = parseFloat(amount);
+                        if (!isNaN(parsed)) {
+                          if (newCurrency === "eur") {
+                            setAmount((parsed * rate).toFixed(2));
+                          } else {
+                            setAmount((parsed / rate).toFixed(4));
+                          }
+                        }
+                      }
+                    }}
+                    className="w-20 rounded-xl border border-border bg-card px-2 py-2.5 text-sm outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    <option value="sol">SOL</option>
+                    <option value="eur">EUR</option>
+                  </select>
+                </div>
                 <p className="text-xs text-muted-foreground">
-                  Available: {available.toFixed(4)} SOL
+                  Available: {available.toFixed(4)} {currency.toUpperCase()}
                 </p>
               </div>
 
@@ -182,9 +225,9 @@ export function WithdrawSheet({
 
             <div className="rounded-2xl bg-card border border-border divide-y divide-border mb-6">
               {[
-                { label: "Amount", value: `${parsedAmount.toFixed(4)} SOL` },
+                { label: "Amount", value: `${parsedAmount.toFixed(4)} ${currency.toUpperCase()}` },
                 { label: "To", value: address },
-                { label: "Balance after", value: `${balanceAfter.toFixed(4)} SOL` },
+                { label: "Balance after", value: `${balanceAfter.toFixed(4)} ${currency.toUpperCase()}` },
               ].map((r) => (
                 <div
                   key={r.label}
@@ -228,7 +271,7 @@ export function WithdrawSheet({
             <p className="text-muted-foreground text-sm max-w-xs">
               Your withdrawal of{" "}
               <span className="font-bold text-foreground">
-                {parsedAmount.toFixed(4)} SOL
+                {parsedAmount.toFixed(4)} {currency.toUpperCase()}
               </span>{" "}
               is awaiting admin approval.
             </p>

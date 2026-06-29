@@ -32,19 +32,21 @@ export default function DashboardPage() {
         {
           label: "Total invested",
           value: `${stats.total_invested_sol} SOL`,
+          subValue: stats.total_invested_eur ? `≈ ${stats.total_invested_eur} €` : null,
           valueClass: "",
         },
         {
           label: `Repaid this month (${stats.month})`,
           value: `${stats.total_repaid_this_month_sol} SOL`,
+          subValue: stats.total_repaid_this_month_eur ? `≈ ${stats.total_repaid_this_month_eur} €` : null,
           valueClass: "text-green-pos",
         },
       ]
     : [
-        { label: "Total users", value: "—", valueClass: "" },
-        { label: "Active loans", value: "—", valueClass: "" },
-        { label: "Total invested", value: "—", valueClass: "" },
-        { label: "Repaid this month", value: "—", valueClass: "" },
+        { label: "Total users", value: "—", subValue: null, valueClass: "" },
+        { label: "Active loans", value: "—", subValue: null, valueClass: "" },
+        { label: "Total invested", value: "—", subValue: null, valueClass: "" },
+        { label: "Repaid this month", value: "—", subValue: null, valueClass: "" },
       ];
 
   return (
@@ -61,11 +63,10 @@ export default function DashboardPage() {
               {isLoading ? (
                 <div className="h-9 w-24 rounded bg-muted animate-pulse" />
               ) : (
-                <p
-                  className={`text-3xl font-bold tracking-tight ${s.valueClass}`}
-                >
-                  {s.value}
-                </p>
+                <div className={`flex flex-col gap-0.5 ${s.valueClass}`}>
+                  <span className="text-3xl font-bold tracking-tight">{s.value}</span>
+                  {s.subValue && <span className="text-sm font-medium text-muted-foreground">{s.subValue}</span>}
+                </div>
               )}
             </CardContent>
           </Card>
@@ -99,14 +100,22 @@ export default function DashboardPage() {
                   </div>
                   <span
                     className={cn(
-                      "text-sm font-semibold shrink-0 ml-4",
+                      "text-sm font-semibold shrink-0 ml-4 flex flex-col items-end",
                       tx.direction === "credit"
                         ? "text-green-pos"
                         : "text-destructive",
                     )}
                   >
-                    {tx.direction === "credit" ? "+" : "-"}
-                    {tx.amount_sol} SOL
+                    <span>
+                      {tx.direction === "credit" ? "+" : "-"}
+                      {tx.amount_sol} SOL
+                    </span>
+                    {tx.amount_eur && (
+                      <span className="text-xs font-medium opacity-75">
+                        {tx.direction === "credit" ? "+" : "-"}
+                        {tx.amount_eur} €
+                      </span>
+                    )}
                   </span>
                 </div>
               ))}

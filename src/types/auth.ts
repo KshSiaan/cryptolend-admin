@@ -336,6 +336,7 @@ export interface AdminTransaction {
   transaction_label: string;
   status: string;
   amount_sol: string;
+  amount_eur?: string;
   processed_at: string;
   created_at: string;
   tx_signature: string | null;
@@ -348,6 +349,7 @@ export interface AdminTransactionListItem {
   transaction_label: string;
   status: string;
   amount_sol: string;
+  amount_eur?: string;
   user: { id: number; name: string; email: string };
 }
 
@@ -355,7 +357,9 @@ export interface AdminDashboardStats {
   total_users: number;
   active_loans: number;
   total_invested_sol: string;
+  total_invested_eur?: string;
   total_repaid_this_month_sol: string;
+  total_repaid_this_month_eur?: string;
   month: string;
   recent_transactions: AdminTransaction[];
 }
@@ -365,6 +369,7 @@ export interface AdminWithdrawalRequest {
   status: string;
   amount_lamports: number;
   amount_sol: string;
+  amount_eur?: string;
   recipient_address: string;
   note: string;
   failure_reason: string;
@@ -385,6 +390,7 @@ export interface AdminDeposit {
   id: number;
   user_id: number;
   amount_lamports: number;
+  amount_eur?: string | null;
   tx_signature: string | null;
   from_address: string;
   to_address: string;
@@ -433,6 +439,8 @@ export interface AdminUser {
   wallet: {
     balance_sol: string;
     frozen_balance_sol: string;
+    balance_eur?: string;
+    frozen_balance_eur?: string;
   };
 }
 

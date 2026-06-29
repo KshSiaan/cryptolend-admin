@@ -172,7 +172,7 @@ function ReviewDialog({
               },
               {
                 label: "Amount",
-                value: `${lamportsToSol(deposit.amount_lamports)} SOL`,
+                value: `${lamportsToSol(deposit.amount_lamports)} SOL${deposit.amount_eur ? ` (≈ ${deposit.amount_eur} €)` : ""}`,
               },
               { label: "Status", value: deposit.status },
               { label: "Detected", value: formatDate(deposit.detected_at) },
@@ -331,8 +331,11 @@ export default function DepositsPage() {
                         {dep.user.email}
                       </span>
                     </div>
-                    <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
-                      <span>{lamportsToSol(dep.amount_lamports)} SOL</span>
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground flex-wrap">
+                      <div className="flex flex-col gap-0.5">
+                        <span className="font-semibold text-foreground">{lamportsToSol(dep.amount_lamports)} SOL</span>
+                        {dep.amount_eur && <span className="text-[10px]">≈ {dep.amount_eur} €</span>}
+                      </div>
                       <span title={dep.tx_signature ?? ""}>
                         {truncate(dep.tx_signature)}
                       </span>

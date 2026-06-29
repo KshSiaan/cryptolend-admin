@@ -177,10 +177,10 @@ function UserDetailDialog({
                   {[
                     { label: "Role", value: user.role },
                     { label: "Status", value: user.status },
-                    { label: "Balance", value: `${user.wallet.balance_sol} SOL` },
+                    { label: "Balance", value: `${user.wallet.balance_sol} SOL${user.wallet.balance_eur ? ` (≈ ${user.wallet.balance_eur} €)` : ""}` },
                     {
                       label: "Frozen",
-                      value: `${user.wallet.frozen_balance_sol} SOL`,
+                      value: `${user.wallet.frozen_balance_sol} SOL${user.wallet.frozen_balance_eur ? ` (≈ ${user.wallet.frozen_balance_eur} €)` : ""}`,
                     },
                     { label: "Joined", value: formatDate(user.created_at) },
                   ].map((r) => (
@@ -352,10 +352,15 @@ export default function UsersPage() {
                       </p>
                     </div>
                   </div>
-                  <div className="hidden sm:flex items-center gap-4 text-xs text-muted-foreground shrink-0">
-                    <span>{user.wallet.balance_sol} SOL</span>
-                    <span className="text-foreground/40">·</span>
-                    <span>{user.wallet.frozen_balance_sol} frozen</span>
+                  <div className="hidden sm:flex items-center gap-4 text-right shrink-0">
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-xs font-semibold text-foreground">{user.wallet.balance_sol} SOL</span>
+                      {user.wallet.balance_eur && <span className="text-[10px] text-muted-foreground">≈ {user.wallet.balance_eur} €</span>}
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-xs font-medium text-muted-foreground">{user.wallet.frozen_balance_sol} frozen</span>
+                      {user.wallet.frozen_balance_eur && <span className="text-[10px] text-muted-foreground">≈ {user.wallet.frozen_balance_eur} €</span>}
+                    </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     <Badge

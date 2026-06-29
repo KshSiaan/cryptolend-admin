@@ -78,17 +78,25 @@ export default function TransactionsPage() {
                     >
                       {tx.status}
                     </Badge>
-                    <span
+                    <div
                       className={cn(
-                        "text-sm font-semibold w-28 text-right",
+                        "flex flex-col items-end gap-0.5 shrink-0 w-28 text-right",
                         tx.direction === "credit"
                           ? "text-green-pos"
                           : "text-destructive",
                       )}
                     >
-                      {tx.direction === "credit" ? "+" : "−"}
-                      {tx.amount_sol} SOL
-                    </span>
+                      <span className="text-sm font-semibold">
+                        {tx.direction === "credit" ? "+" : "−"}
+                        {tx.amount_sol} SOL
+                      </span>
+                      {tx.amount_eur && (
+                        <span className="text-[10px] opacity-80">
+                          {tx.direction === "credit" ? "+" : "−"}
+                          {tx.amount_eur} €
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}

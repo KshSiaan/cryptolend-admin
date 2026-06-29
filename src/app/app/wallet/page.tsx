@@ -124,7 +124,10 @@ export default function WalletPage() {
             <span className="text-sm font-medium">Deposit</span>
           </button>
         </DepositSheet>
-        <WithdrawSheet availableSol={stats?.available_sol ?? "0"}>
+        <WithdrawSheet 
+          availableSol={stats?.available_sol ?? "0"} 
+          availableEur={stats?.available_eur ?? "0"}
+        >
           <button
             type="button"
             className="flex flex-col items-center gap-2 rounded-2xl bg-card border border-border p-4 hover:bg-muted/50 transition-colors"
