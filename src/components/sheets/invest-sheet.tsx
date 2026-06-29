@@ -327,7 +327,7 @@ export function InvestSheet({
                     green: false,
                   },
                   {
-                    label: "Total interest earned",
+                    label: "Total expected interest",
                     sol: `+${totalInterest.toFixed(4)} SOL`,
                     eur:
                       eurVal > 0 ? `+${totalInterestEur.toFixed(2)} EUR` : null,
