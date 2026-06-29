@@ -97,6 +97,8 @@ export interface DepositInstructions {
 export interface DepositBody {
   tx_signature: string;
   from_address: string;
+  input_amount?: string;
+  input_currency?: string;
 }
 
 export interface DepositRecord {
@@ -104,6 +106,8 @@ export interface DepositRecord {
   user_id: number;
   amount_lamports: number;
   amount_sol: string;
+  input_amount?: string | null;
+  input_currency?: string | null;
   tx_signature: string;
   from_address: string;
   to_address: string;
@@ -394,6 +398,8 @@ export interface AdminDeposit {
   id: number;
   user_id: number;
   amount_lamports: number;
+  input_amount?: string | null;
+  input_currency?: string | null;
   amount_eur?: string | null;
   tx_signature: string | null;
   from_address: string;

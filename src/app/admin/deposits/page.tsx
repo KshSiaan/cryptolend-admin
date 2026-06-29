@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { useCookies } from "react-cookie";
 import { toast } from "sonner";
+import { Copy } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -174,13 +175,37 @@ function ReviewDialog({
                 label: "Amount",
                 value: `${lamportsToSol(deposit.amount_lamports)} SOL${deposit.amount_eur ? ` (≈ ${deposit.amount_eur} €)` : ""}`,
               },
+              {
+                label: "Intended",
+                value: deposit.input_amount
+                  ? `${deposit.input_amount} ${deposit.input_currency?.toUpperCase()}`
+                  : "N/A",
+              },
               { label: "Status", value: deposit.status },
               { label: "Detected", value: formatDate(deposit.detected_at) },
-              { label: "TX", value: truncate(deposit.tx_signature, 20) },
+              { label: "Sender", value: deposit.from_address, copyable: true },
+              { label: "TX", value: deposit.tx_signature, copyable: true },
             ].map((r) => (
-              <div key={r.label} className="flex justify-between px-3 py-2">
-                <span className="text-muted-foreground">{r.label}</span>
-                <span className="font-medium">{r.value}</span>
+              <div key={r.label} className="flex flex-col sm:flex-row sm:justify-between px-3 py-2 gap-1 sm:items-start overflow-hidden">
+                <span className="text-muted-foreground shrink-0 mt-0.5">{r.label}</span>
+                {r.copyable && r.value ? (
+                  <div className="flex items-start gap-2 min-w-0 justify-end sm:text-right">
+                    <span className="font-medium text-xs break-all mt-0.5">{r.value}</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(r.value as string);
+                        toast.success(`${r.label} copied!`);
+                      }}
+                      className="p-1 hover:bg-black/5 dark:hover:bg-white/10 rounded shrink-0 transition-colors"
+                      title="Copy"
+                    >
+                      <Copy className="w-3 h-3" />
+                    </button>
+                  </div>
+                ) : (
+                  <span className="font-medium text-right break-words">{r.value}</span>
+                )}
               </div>
             ))}
           </div>
@@ -336,9 +361,44 @@ export default function DepositsPage() {
                         <span className="font-semibold text-foreground">{lamportsToSol(dep.amount_lamports)} SOL</span>
                         {dep.amount_eur && <span className="text-[10px]">≈ {dep.amount_eur} €</span>}
                       </div>
-                      <span title={dep.tx_signature ?? ""}>
-                        {truncate(dep.tx_signature)}
-                      </span>
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-1">
+                          <span title={dep.tx_signature ?? ""}>
+                            TX: {truncate(dep.tx_signature, 12)}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (dep.tx_signature) {
+                                navigator.clipboard.writeText(dep.tx_signature);
+                                toast.success("TX Signature copied!");
+                              }
+                            }}
+                            className="p-1 hover:bg-black/5 dark:hover:bg-white/10 rounded transition-colors"
+                            title="Copy TX Signature"
+                          >
+                            <Copy className="w-3 h-3" />
+                          </button>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <span title={dep.from_address}>
+                            From: {truncate(dep.from_address, 12)}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (dep.from_address) {
+                                navigator.clipboard.writeText(dep.from_address);
+                                toast.success("Sender Address copied!");
+                              }
+                            }}
+                            className="p-1 hover:bg-black/5 dark:hover:bg-white/10 rounded transition-colors"
+                            title="Copy Sender Address"
+                          >
+                            <Copy className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </div>
                       <span>{formatDate(dep.detected_at)}</span>
                     </div>
                   </div>

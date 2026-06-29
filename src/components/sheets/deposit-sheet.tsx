@@ -84,7 +84,12 @@ export function DepositSheet({ children }: { children: React.ReactNode }) {
     setIsPending(true);
     setStep("processing");
     try {
-      const body: DepositBody = { tx_signature: txSignature, from_address: senderAddr };
+      const body: DepositBody = {
+        tx_signature: txSignature,
+        from_address: senderAddr,
+        input_amount: eurAmount || solEquiv || "",
+        input_currency: eurAmount ? "eur" : solEquiv ? "sol" : "",
+      };
       const res = await howl<ApiResponse<DepositResponseData>>("/wallet/deposits", {
         method: "POST",
         body,
@@ -298,7 +303,7 @@ export function DepositSheet({ children }: { children: React.ReactNode }) {
               </svg>
             </div>
             <h2 className="text-xl font-bold">Deposit Submitted!</h2>
-            <p className="text-muted-foreground text-sm">
+            <p className="text-destructive font-medium text-sm">
               Your deposit is pending blockchain confirmation.
             </p>
 
@@ -306,7 +311,21 @@ export function DepositSheet({ children }: { children: React.ReactNode }) {
               <div className="w-full rounded-2xl bg-card border border-border divide-y divide-border">
                 {[
                   { label: "Status", value: depositResult.deposit.status },
-                  { label: "Amount", value: `${depositResult.deposit.amount_sol} SOL` },
+                  ...(depositResult.deposit.input_amount
+                    ? [
+                        {
+                          label: "Intended",
+                          value: `${depositResult.deposit.input_amount} ${depositResult.deposit.input_currency?.toUpperCase()}`,
+                        },
+                      ]
+                    : []),
+                  {
+                    label: "Amount",
+                    value:
+                      depositResult.deposit.amount_sol === "0"
+                        ? "Processing..."
+                        : `${depositResult.deposit.amount_sol} SOL`,
+                  },
                   { label: "Network", value: "Solana" },
                   {
                     label: "Tx Signature",

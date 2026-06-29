@@ -250,12 +250,24 @@ export default function WalletPage() {
                             : "text-destructive",
                         )}
                       >
-                        {tx.direction === "credit" ? "+" : "−"}
-                        {tx.amount_sol} SOL
+                        {tx.amount_sol === "0" ? (
+                          "Processing..."
+                        ) : (
+                          <>
+                            {tx.direction === "credit" ? "+" : "−"}
+                            {tx.amount_sol} SOL
+                          </>
+                        )}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {tx.direction === "credit" ? "+" : "−"}
-                        {tx.amount_eur} €
+                        {tx.amount_sol === "0" ? (
+                          "Processing..."
+                        ) : (
+                          <>
+                            {tx.direction === "credit" ? "+" : "−"}
+                            {tx.amount_eur} €
+                          </>
+                        )}
                       </p>
                     </div>
                   </div>
