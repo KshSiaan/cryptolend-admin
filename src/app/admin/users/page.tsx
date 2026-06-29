@@ -28,6 +28,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { CheckCircle2, XCircle } from "lucide-react";
 import {
   Pagination,
   PaginationContent,
@@ -191,6 +192,16 @@ function UserDetailDialog({
                       <span className="font-medium capitalize">{r.value}</span>
                     </div>
                   ))}
+                  <div className="flex justify-between px-3 py-2">
+                    <span className="text-muted-foreground">Email Status</span>
+                    <span className="font-medium flex items-center gap-1.5 text-sm">
+                      {user.email_verified_at ? (
+                        <><CheckCircle2 className="w-4 h-4 text-green-500" /> Verified</>
+                      ) : (
+                        <><XCircle className="w-4 h-4 text-red-500" /> Unverified</>
+                      )}
+                    </span>
+                  </div>
                   {user.referral_code && (
                     <div className="flex justify-between px-3 py-2">
                       <span className="text-muted-foreground">Referral Code</span>
@@ -417,8 +428,13 @@ export default function UsersPage() {
                       <p className="text-sm font-semibold truncate">
                         {user.name}
                       </p>
-                      <p className="text-xs text-muted-foreground truncate">
+                      <p className="text-xs text-muted-foreground truncate flex items-center gap-1">
                         {user.email}
+                        {user.email_verified_at ? (
+                          <CheckCircle2 className="w-3 h-3 text-green-500" title="Verified" />
+                        ) : (
+                          <XCircle className="w-3 h-3 text-red-500" title="Unverified" />
+                        )}
                       </p>
                       {user.referred_by && (
                         <p className="text-[10px] text-muted-foreground truncate">
