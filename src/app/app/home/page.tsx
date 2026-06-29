@@ -197,7 +197,12 @@ export default function HomePage() {
                   <p className="text-sm font-medium capitalize">
                     {tx.category}
                   </p>
-                  <p className="text-xs text-muted-foreground">
+                  {tx.meta?.reason && (
+                    <p className="text-[11px] text-muted-foreground/80 italic mt-0.5">
+                      "{tx.meta.reason}"
+                    </p>
+                  )}
+                  <p className="text-xs text-muted-foreground mt-0.5">
                     {formatDate(tx.created_at)}
                   </p>
                 </div>

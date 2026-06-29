@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import { useCookies } from "react-cookie";
 import { toast } from "sonner";
@@ -67,7 +67,18 @@ const editableLoanStatuses: EditableLoanStatus[] = [
 
 const loanStatusFilters: LoanStatus[] = ["all", ...editableLoanStatuses];
 
-const SECTORS = ["Retail", "Agriculture", "Healthcare", "Manufacturing"];
+const SECTORS = [
+  "Real Estate / Rental",
+  "Healthcare",
+  "Retail / E-Commerce",
+  "Construction",
+  "Technology / IT Services",
+  "Manufacturing",
+  "Hospitality (Hotels & Restaurants)",
+  "Transportation / Logistics",
+  "Financial Services",
+  "Professional Services (Consulting, Legal, Agencies)",
+];
 
 function formatStatusLabel(status: string) {
   return status.replace("_", " ");
@@ -77,16 +88,20 @@ interface LoanFormState {
   title: string;
   sector: string;
   description: string;
-  target_amount_sol: string;
+  currency: "sol" | "eur";
+  target_amount: string;
+  funded_amount: string;
   apr_percent: string;
   duraction_months: string;
 }
 
 const emptyForm: LoanFormState = {
   title: "",
-  sector: "Retail",
+  sector: "Real Estate / Rental",
   description: "",
-  target_amount_sol: "",
+  currency: "sol",
+  target_amount: "",
+  funded_amount: "",
   apr_percent: "",
   duraction_months: "",
 };
@@ -100,8 +115,32 @@ function LoanFormFields({
   onChange: (f: LoanFormState) => void;
   locked?: boolean;
 }) {
+  const [cookies] = useCookies(["auth_token"]);
+  const [rate, setRate] = useState<number | null>(null);
+
+  useEffect(() => {
+    const token = cookies.auth_token;
+    if (!token) return;
+    howl<ApiResponse<any>>("/market/convert?from=sol&to=eur&amount=1", { token })
+      .then((res) => {
+        const r = parseFloat(res.data?.conversion?.output_amount_eur);
+        if (!isNaN(r)) setRate(r);
+      })
+      .catch(() => {});
+  }, [cookies.auth_token]);
+
   const set = <K extends keyof LoanFormState>(k: K, v: string) =>
     onChange({ ...form, [k]: v });
+
+  function getConverted(amountStr: string) {
+    if (!amountStr || !rate) return null;
+    const val = parseFloat(amountStr);
+    if (isNaN(val)) return null;
+    if (form.currency === "sol") {
+      return `≈ ${(val * rate).toFixed(2)} €`;
+    }
+    return `≈ ${(val / rate).toFixed(4)} SOL`;
+  }
 
   return (
     <div className="space-y-4">
@@ -137,16 +176,72 @@ function LoanFormFields({
           className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring resize-none"
         />
       </div>
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
-          <Label>Target (SOL)</Label>
+          <div className="flex justify-between items-end">
+            <Label>Target</Label>
+            {form.target_amount && rate && (
+              <span className="text-[10px] text-muted-foreground">{getConverted(form.target_amount)}</span>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <Input
+              type="number"
+              min={0}
+              step="any"
+              value={form.target_amount}
+              onChange={(e) => set("target_amount", e.target.value)}
+              disabled={locked}
+              className="flex-1"
+            />
+            <select
+              value={form.currency}
+              onChange={(e) => {
+                const newCurrency = e.target.value as "sol" | "eur";
+                if (newCurrency === form.currency) return;
+                let newTarget = form.target_amount;
+                let newFunded = form.funded_amount;
+                if (rate) {
+                  const t = parseFloat(newTarget);
+                  const f = parseFloat(newFunded);
+                  if (newCurrency === "eur") {
+                    if (!isNaN(t)) newTarget = (t * rate).toFixed(2);
+                    if (!isNaN(f)) newFunded = (f * rate).toFixed(2);
+                  } else {
+                    if (!isNaN(t)) newTarget = (t / rate).toFixed(4);
+                    if (!isNaN(f)) newFunded = (f / rate).toFixed(4);
+                  }
+                }
+                onChange({
+                  ...form,
+                  currency: newCurrency,
+                  target_amount: newTarget,
+                  funded_amount: newFunded,
+                });
+              }}
+              className="border border-input rounded-md px-2 text-sm bg-background font-medium disabled:opacity-50"
+              disabled={locked}
+            >
+              <option value="sol">SOL</option>
+              <option value="eur">EUR</option>
+            </select>
+          </div>
+        </div>
+        <div className="space-y-1.5">
+          <div className="flex justify-between items-end">
+            <Label>Initial Funding</Label>
+            {form.funded_amount && rate && (
+              <span className="text-[10px] text-muted-foreground">{getConverted(form.funded_amount)}</span>
+            )}
+          </div>
           <Input
             type="number"
             min={0}
-            step="0.0001"
-            value={form.target_amount_sol}
-            onChange={(e) => set("target_amount_sol", e.target.value)}
+            step="any"
+            value={form.funded_amount}
+            onChange={(e) => set("funded_amount", e.target.value)}
             disabled={locked}
+            placeholder="0"
           />
         </div>
         <div className="space-y-1.5">
@@ -214,7 +309,9 @@ function CreateDialog({
           title: form.title,
           sector: form.sector,
           description: form.description,
-          target_amount_sol: parseFloat(form.target_amount_sol),
+          currency: form.currency,
+          target_amount: parseFloat(form.target_amount),
+          ...(form.funded_amount && { funded_amount: parseFloat(form.funded_amount) }),
           apr_percent: parseFloat(form.apr_percent),
           duraction_months: parseInt(form.duraction_months, 10),
           funding_ends_at: formatDateTimeForApi(fundingEndsAt),
@@ -280,7 +377,9 @@ function EditDialog({
     title: loan.title,
     sector: loan.sector,
     description: loan.description,
-    target_amount_sol: loan.target_amount_sol,
+    currency: "sol",
+    target_amount: loan.target_amount_sol,
+    funded_amount: loan.funded_amount_sol || "",
     apr_percent: loan.apr_percent,
     duraction_months: String(loan.duraction_months),
   });
@@ -310,7 +409,13 @@ function EditDialog({
         funding_ends_at: formatDateTimeForApi(fundingEndsAt),
       };
       if (!financiallyLocked) {
-        body.target_amount_sol = parseFloat(form.target_amount_sol);
+        body.currency = form.currency;
+        body.target_amount = parseFloat(form.target_amount);
+        if (form.funded_amount) {
+          body.funded_amount = parseFloat(form.funded_amount);
+        } else {
+          body.funded_amount = 0;
+        }
         body.apr_percent = parseFloat(form.apr_percent);
         body.duraction_months = parseInt(form.duraction_months, 10);
       }
@@ -461,11 +566,11 @@ function lamportsToSol(lamports: number) {
 
 function fundedPercent(loan: AdminLoan) {
   if (!loan.target_amount_lamports) return 0;
+  const totalFunded =
+    loan.initial_funded_amount_lamports + loan.funded_amount_lamports;
   return Math.min(
     100,
-    Math.round(
-      (loan.funded_amount_lamports / loan.target_amount_lamports) * 100,
-    ),
+    Math.round((totalFunded / loan.target_amount_lamports) * 100),
   );
 }
 
@@ -568,19 +673,31 @@ export default function LoansPage() {
                           {loan.sector}
                         </span>
                       </div>
-                      <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
-                        <span>
-                          {lamportsToSol(loan.funded_amount_lamports)} /{" "}
-                          {lamportsToSol(loan.target_amount_lamports)} SOL
-                        </span>
-                        <span>{loan.apr_percent}% APR</span>
-                        <span>{loan.duraction_months}mo</span>
-                        <span>
-                          Funding ends: {formatFundingEndsAt(loan.funding_ends_at)}
-                        </span>
-                        <span className="text-foreground font-medium">
-                          {pct}% funded
-                        </span>
+                      <div className="flex flex-col gap-1.5 mt-2">
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
+                          <span className="bg-muted/50 border px-1.5 py-0.5 rounded-md">
+                            <span className="font-medium text-foreground">Total:</span> {loan.total_funded_amount_sol} / {loan.target_amount_sol} SOL
+                            {loan.target_amount_eur && <span className="opacity-75"> ({loan.total_funded_amount_eur} / {loan.target_amount_eur} €)</span>}
+                          </span>
+                          <span className="bg-muted/50 border px-1.5 py-0.5 rounded-md">
+                            <span className="font-medium text-foreground">Initial:</span> {loan.initial_funded_amount_sol} SOL
+                            {loan.initial_funded_amount_eur && <span className="opacity-75"> ({loan.initial_funded_amount_eur} €)</span>}
+                          </span>
+                          <span className="bg-muted/50 border px-1.5 py-0.5 rounded-md">
+                            <span className="font-medium text-foreground">User:</span> {loan.investor_funded_amount_sol} SOL
+                            {loan.investor_funded_amount_eur && <span className="opacity-75"> ({loan.investor_funded_amount_eur} €)</span>}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap mt-0.5">
+                          <span>{loan.apr_percent}% APR</span>
+                          <span>{loan.duraction_months}mo</span>
+                          <span>
+                            Ends: {formatFundingEndsAt(loan.funding_ends_at)}
+                          </span>
+                          <span className="text-foreground font-medium">
+                            {pct}% funded
+                          </span>
+                        </div>
                       </div>
                       <div className="w-full max-w-xs h-1.5 rounded-full bg-muted overflow-hidden">
                         <div

@@ -62,6 +62,7 @@ export interface ProfileData {
   email: string;
   profile_photo_path: string | null;
   profile_photo_url: string | null;
+  referral_code: string;
   role: string;
   created_at: string;
   member_since: string;
@@ -444,6 +445,7 @@ export interface AdminLoan {
   apr_percent: string;
   target_amount_lamports: number;
   funded_amount_lamports: number;
+  initial_funded_amount_lamports: number;
   duraction_months: number;
   funding_ends_at?: string | null;
   status: string;
@@ -452,5 +454,13 @@ export interface AdminLoan {
   updated_at: string;
   target_amount_sol: string;
   funded_amount_sol: string;
+  initial_funded_amount_sol: string;
+  investor_funded_amount_sol: string;
+  total_funded_amount_sol: string;
+  target_amount_eur?: string;
+  funded_amount_eur?: string;
+  initial_funded_amount_eur?: string;
+  investor_funded_amount_eur?: string;
+  total_funded_amount_eur?: string;
   creator: { id: number; name: string; email: string };
 }

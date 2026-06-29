@@ -19,6 +19,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
@@ -82,10 +84,12 @@ function UserDetailDialog({
   user,
   onClose,
   onStatusChange,
+  onRefresh,
 }: {
   user: AdminUser;
   onClose: () => void;
   onStatusChange: (updated: AdminUser) => void;
+  onRefresh?: () => void;
 }) {
   const [cookies] = useCookies(["auth_token"]);
   const token = cookies.auth_token as string | undefined;
@@ -93,6 +97,12 @@ function UserDetailDialog({
     "suspend" | "activate" | null
   >(null);
   const [pending, setPending] = useState(false);
+  
+  const [adjusting, setAdjusting] = useState(false);
+  const [amount, setAmount] = useState("");
+  const [currency, setCurrency] = useState<"sol" | "eur">("sol");
+  const [reason, setReason] = useState("");
+  const [adjustPending, setAdjustPending] = useState(false);
 
   async function handleStatusUpdate() {
     if (!token || !confirmAction) return;
@@ -115,6 +125,32 @@ function UserDetailDialog({
     }
   }
 
+  async function handleAdjustBalance(e: React.FormEvent) {
+    e.preventDefault();
+    if (!token || !amount || !reason) return;
+    setAdjustPending(true);
+    try {
+      await howl(`/admin/users/${user.id}/balance`, {
+        method: "POST",
+        token,
+        body: {
+          amount: Number(amount),
+          amount_currency: currency,
+          reason,
+        },
+      });
+      toast.success("Balance adjusted successfully.");
+      setAdjusting(false);
+      setAmount("");
+      setReason("");
+      if (onRefresh) onRefresh();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Adjustment failed.");
+    } finally {
+      setAdjustPending(false);
+    }
+  }
+
   return (
     <>
       <Dialog
@@ -128,52 +164,100 @@ function UserDetailDialog({
             <DialogTitle>User Details</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <UserAvatar user={user} />
-              <div>
-                <p className="text-sm font-semibold">{user.name}</p>
-                <p className="text-xs text-muted-foreground">{user.email}</p>
-              </div>
-            </div>
-            <div className="rounded-lg border border-border divide-y divide-border text-sm">
-              {[
-                { label: "Role", value: user.role },
-                { label: "Status", value: user.status },
-                { label: "Balance", value: `${user.wallet.balance_sol} SOL` },
-                {
-                  label: "Frozen",
-                  value: `${user.wallet.frozen_balance_sol} SOL`,
-                },
-                { label: "Joined", value: formatDate(user.created_at) },
-              ].map((r) => (
-                <div key={r.label} className="flex justify-between px-3 py-2">
-                  <span className="text-muted-foreground">{r.label}</span>
-                  <span className="font-medium capitalize">{r.value}</span>
+            {!adjusting ? (
+              <>
+                <div className="flex items-center gap-3">
+                  <UserAvatar user={user} />
+                  <div>
+                    <p className="text-sm font-semibold">{user.name}</p>
+                    <p className="text-xs text-muted-foreground">{user.email}</p>
+                  </div>
                 </div>
-              ))}
-            </div>
-          </div>
-          <DialogFooter>
-            {user.status === "active" ? (
-              <Button
-                variant="outline"
-                className="text-destructive hover:text-destructive"
-                onClick={() => setConfirmAction("suspend")}
-              >
-                Suspend
-              </Button>
+                <div className="rounded-lg border border-border divide-y divide-border text-sm">
+                  {[
+                    { label: "Role", value: user.role },
+                    { label: "Status", value: user.status },
+                    { label: "Balance", value: `${user.wallet.balance_sol} SOL` },
+                    {
+                      label: "Frozen",
+                      value: `${user.wallet.frozen_balance_sol} SOL`,
+                    },
+                    { label: "Joined", value: formatDate(user.created_at) },
+                  ].map((r) => (
+                    <div key={r.label} className="flex justify-between px-3 py-2">
+                      <span className="text-muted-foreground">{r.label}</span>
+                      <span className="font-medium capitalize">{r.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </>
             ) : (
-              <Button
-                variant="outline"
-                onClick={() => setConfirmAction("activate")}
-              >
-                Activate
-              </Button>
+              <form onSubmit={handleAdjustBalance} className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Amount</Label>
+                  <div className="flex gap-2">
+                    <Input 
+                      type="number" 
+                      step="any" 
+                      value={amount} 
+                      onChange={(e) => setAmount(e.target.value)}
+                      placeholder="e.g. 50 or -50"
+                      required
+                    />
+                    <select 
+                      value={currency} 
+                      onChange={(e) => setCurrency(e.target.value as "sol"|"eur")}
+                      className="border border-input rounded-md px-3 text-sm bg-background font-medium"
+                    >
+                      <option value="sol">SOL</option>
+                      <option value="eur">EUR</option>
+                    </select>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Use negative values to deduct.</p>
+                </div>
+                <div className="space-y-2">
+                  <Label>Reason</Label>
+                  <Input 
+                    value={reason} 
+                    onChange={(e) => setReason(e.target.value)}
+                    placeholder="Why is this being adjusted?"
+                    required
+                    minLength={5}
+                  />
+                </div>
+                <div className="flex justify-end gap-2 pt-2">
+                  <Button type="button" variant="outline" onClick={() => setAdjusting(false)} disabled={adjustPending}>Cancel</Button>
+                  <Button type="submit" disabled={adjustPending}>{adjustPending ? "Saving..." : "Adjust Balance"}</Button>
+                </div>
+              </form>
             )}
-            <Button variant="outline" onClick={onClose}>
-              Close
-            </Button>
-          </DialogFooter>
+          </div>
+          {!adjusting && (
+            <DialogFooter className="sm:justify-between items-center mt-4">
+              <Button type="button" variant="secondary" onClick={() => setAdjusting(true)}>Adjust Balance</Button>
+              <div className="flex items-center gap-2">
+                {user.status === "active" ? (
+                  <Button
+                    variant="outline"
+                    className="text-destructive hover:text-destructive"
+                    onClick={() => setConfirmAction("suspend")}
+                  >
+                    Suspend
+                  </Button>
+                ) : (
+                  <Button
+                    variant="outline"
+                    onClick={() => setConfirmAction("activate")}
+                  >
+                    Activate
+                  </Button>
+                )}
+                <Button variant="outline" onClick={onClose}>
+                  Close
+                </Button>
+              </div>
+            </DialogFooter>
+          )}
         </DialogContent>
       </Dialog>
 
@@ -340,6 +424,10 @@ export default function UsersPage() {
           user={viewing}
           onClose={() => setViewing(null)}
           onStatusChange={handleStatusChange}
+          onRefresh={() => {
+            setViewing(null);
+            void refetch();
+          }}
         />
       )}
     </div>

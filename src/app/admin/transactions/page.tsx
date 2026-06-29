@@ -63,7 +63,12 @@ export default function TransactionsPage() {
                     <p className="text-sm font-medium">
                       {categoryLabel[tx.category] ?? tx.transaction_label}
                     </p>
-                    <p className="text-xs text-muted-foreground truncate">
+                    {tx.meta?.reason && (
+                      <p className="text-[12px] text-muted-foreground/80 italic">
+                        "{tx.meta.reason}"
+                      </p>
+                    )}
+                    <p className="text-xs text-muted-foreground truncate mt-0.5">
                       {tx.user.name} · {tx.user.email}
                     </p>
                   </div>

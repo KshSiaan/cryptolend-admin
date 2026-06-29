@@ -219,6 +219,11 @@ export default function WalletPage() {
                     <p className="text-sm font-medium">
                       {tx.transaction_label}
                     </p>
+                    {tx.meta?.reason && (
+                      <p className="text-[11px] text-muted-foreground/80 italic">
+                        "{tx.meta.reason}"
+                      </p>
+                    )}
                     <p className="text-xs text-muted-foreground">
                       {formatDate(tx.created_at)}
                     </p>

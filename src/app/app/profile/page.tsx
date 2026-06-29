@@ -9,6 +9,8 @@ import {
   HelpCircle,
   Lock,
   Pencil,
+  Copy,
+  Gift,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -128,6 +130,13 @@ export default function ProfilePage() {
         .toUpperCase()
     : "??";
 
+  const handleCopy = () => {
+    if (profile?.referral_code) {
+      navigator.clipboard.writeText(profile.referral_code);
+      toast.success("Referral code copied to clipboard!");
+    }
+  };
+
   return (
     <div className="py-6 space-y-6">
       <h1 className="text-xl font-bold tracking-tight">Profile</h1>
@@ -196,6 +205,28 @@ export default function ProfilePage() {
               )}
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* Referral Card */}
+      <div className="rounded-2xl bg-card border border-border p-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+            <Gift size={20} />
+          </div>
+          <div>
+            <p className="text-sm font-bold text-foreground">Refer a friend</p>
+            <p className="text-xs text-muted-foreground">Share your invite code</p>
+          </div>
+        </div>
+        <div 
+          onClick={handleCopy}
+          className="flex items-center gap-2 bg-primary text-primary-foreground hover:bg-primary/90 px-3 py-1.5 rounded-lg cursor-pointer transition-colors shadow-sm"
+        >
+          <span className="text-sm font-bold font-mono tracking-wider">
+            {profile?.referral_code ?? "---"}
+          </span>
+          <Copy size={14} />
         </div>
       </div>
       {profile?.role === "admin" && (
