@@ -28,6 +28,7 @@ export interface RegisterBody {
   email: string;
   password: string;
   password_confirmation: string;
+  referral_code?: string;
 }
 
 export interface LoginBody {
@@ -442,6 +443,9 @@ export interface AdminUser {
     balance_eur?: string;
     frozen_balance_eur?: string;
   };
+  referral_code?: string;
+  referrals_count?: number;
+  referred_by?: { id: number; name: string; email: string } | null;
 }
 
 export interface AdminLoan {

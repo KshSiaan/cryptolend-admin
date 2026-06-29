@@ -19,6 +19,7 @@ export default function RegisterPage() {
     email: "",
     password: "",
     password_confirmation: "",
+    referral_code: "",
   });
 
   const mutation = useMutation({
@@ -122,6 +123,17 @@ export default function RegisterPage() {
               onChange={handleChange}
               required
               autoComplete="new-password"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="referral_code">Referral Code (Optional)</Label>
+            <Input
+              id="referral_code"
+              name="referral_code"
+              type="text"
+              placeholder="e.g. ABC123DX"
+              value={form.referral_code}
+              onChange={handleChange}
             />
           </div>
           <Button

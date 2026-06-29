@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import Image from "next/image";
 import { useCookies } from "react-cookie";
@@ -85,11 +85,13 @@ function UserDetailDialog({
   onClose,
   onStatusChange,
   onRefresh,
+  onViewReferrals,
 }: {
   user: AdminUser;
   onClose: () => void;
   onStatusChange: (updated: AdminUser) => void;
   onRefresh?: () => void;
+  onViewReferrals?: (user: AdminUser) => void;
 }) {
   const [cookies] = useCookies(["auth_token"]);
   const token = cookies.auth_token as string | undefined;
@@ -189,6 +191,39 @@ function UserDetailDialog({
                       <span className="font-medium capitalize">{r.value}</span>
                     </div>
                   ))}
+                  {user.referral_code && (
+                    <div className="flex justify-between px-3 py-2">
+                      <span className="text-muted-foreground">Referral Code</span>
+                      <span className="font-medium capitalize">{user.referral_code}</span>
+                    </div>
+                  )}
+                  {user.referrals_count !== undefined && (
+                    <div className="flex justify-between px-3 py-2">
+                      <span className="text-muted-foreground">Total Referred</span>
+                      {user.referrals_count > 0 && onViewReferrals ? (
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">{user.referrals_count}</span>
+                          <button
+                            onClick={() => {
+                              onViewReferrals(user);
+                              onClose();
+                            }}
+                            className="text-[10px] font-bold bg-primary/10 text-primary hover:bg-primary/20 px-2 py-0.5 rounded transition-colors"
+                          >
+                            View All
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="font-medium">{user.referrals_count}</span>
+                      )}
+                    </div>
+                  )}
+                  {user.referred_by && (
+                    <div className="flex justify-between px-3 py-2">
+                      <span className="text-muted-foreground">Referred By</span>
+                      <span className="font-medium capitalize">{user.referred_by.name} ({user.referred_by.email})</span>
+                    </div>
+                  )}
                 </div>
               </>
             ) : (
@@ -306,8 +341,16 @@ function UserDetailDialog({
 export default function UsersPage() {
   const [page, setPage] = useState(1);
   const [viewing, setViewing] = useState<AdminUser | null>(null);
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [referrerFilter, setReferrerFilter] = useState<AdminUser | null>(null);
 
-  const { data, isLoading, refetch } = useAdminUsers(page);
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search), 300);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  const { data, isLoading, refetch } = useAdminUsers(page, debouncedSearch, referrerFilter?.id);
 
   const users = data?.data?.data ?? [];
   const lastPage = data?.data?.last_page ?? 1;
@@ -320,7 +363,34 @@ export default function UsersPage() {
 
   return (
     <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-semibold tracking-tight">Users</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <h1 className="text-2xl font-semibold tracking-tight">Users</h1>
+        <div className="flex items-center gap-4">
+          {referrerFilter && (
+            <div className="flex items-center gap-2 bg-primary/10 text-primary px-3 py-1.5 rounded-full text-sm">
+              <span>Referrals by: <span className="font-semibold">{referrerFilter.name}</span></span>
+              <button 
+                onClick={() => {
+                  setReferrerFilter(null);
+                  setPage(1);
+                }}
+                className="hover:text-primary/70 font-bold ml-1"
+              >
+                &times;
+              </button>
+            </div>
+          )}
+          <Input
+            placeholder="Search users by name or email..."
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+            className="max-w-xs"
+          />
+        </div>
+      </div>
 
       <Card className="shadow-none">
         <CardContent className="p-0">
@@ -350,6 +420,22 @@ export default function UsersPage() {
                       <p className="text-xs text-muted-foreground truncate">
                         {user.email}
                       </p>
+                      {user.referred_by && (
+                        <p className="text-[10px] text-muted-foreground truncate">
+                          Referred by: {user.referred_by.name}
+                        </p>
+                      )}
+                      {(user.referrals_count ?? 0) > 0 && (
+                        <button 
+                          onClick={() => {
+                            setReferrerFilter(user);
+                            setPage(1);
+                          }}
+                          className="text-[10px] truncate text-primary hover:underline font-medium text-left cursor-pointer"
+                        >
+                          Total Referred: {user.referrals_count}
+                        </button>
+                      )}
                     </div>
                   </div>
                   <div className="hidden sm:flex items-center gap-4 text-right shrink-0">
@@ -432,6 +518,10 @@ export default function UsersPage() {
           onRefresh={() => {
             setViewing(null);
             void refetch();
+          }}
+          onViewReferrals={(user) => {
+            setReferrerFilter(user);
+            setPage(1);
           }}
         />
       )}
