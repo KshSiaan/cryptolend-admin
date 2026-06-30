@@ -488,7 +488,10 @@ export interface AdminLoan {
   funded_amount_lamports: number;
   initial_funded_amount_lamports: number;
   duraction_months: number;
+  funding_starts_at?: string | null;
   funding_ends_at?: string | null;
+  funding_finalized_at?: string | null;
+  failed_at?: string | null;
   status: string;
   created_by: number;
   created_at: string;

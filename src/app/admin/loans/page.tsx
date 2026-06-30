@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-
+import Link from "next/link";
 import { useCookies } from "react-cookie";
 import { toast } from "sonner";
 
@@ -712,6 +712,11 @@ export default function LoansPage() {
                       >
                         {formatStatusLabel(loan.status)}
                       </Badge>
+                      <Link href={`/admin/loans/${loan.id}`}>
+                        <Button size="sm" variant="outline">
+                          Details
+                        </Button>
+                      </Link>
                       <Button
                         size="sm"
                         variant="outline"

@@ -30,3 +30,36 @@ export function useAdminLoans(status: AdminLoanStatus, page = 1) {
     staleTime: 1000 * 30,
   });
 }
+
+export function useAdminLoan(id: number) {
+  const [cookies] = useCookies(["auth_token"]);
+  const token = cookies.auth_token as string | undefined;
+
+  return useQuery({
+    queryKey: ["admin-loan", id],
+    queryFn: () =>
+      howl<ApiResponse<AdminLoan>>(`/admin/loans/${id}`, {
+        token,
+      }),
+    enabled: !!token && !!id,
+    staleTime: 1000 * 30,
+  });
+}
+
+export function useAdminLoanInvestments(id: number, page = 1) {
+  const [cookies] = useCookies(["auth_token"]);
+  const token = cookies.auth_token as string | undefined;
+
+  return useQuery({
+    queryKey: ["admin-loan-investments", id, page],
+    queryFn: () =>
+      howl<ApiResponse<Paginator<any[]>>>(
+        `/admin/loans/${id}/investments?page=${page}`,
+        {
+          token,
+        },
+      ),
+    enabled: !!token && !!id,
+    staleTime: 1000 * 30,
+  });
+}
