@@ -456,6 +456,25 @@ export interface AdminUser {
   referral_code?: string;
   referrals_count?: number;
   referred_by?: { id: number; name: string; email: string } | null;
+  investments?: AdminUserInvestment[];
+}
+
+export interface AdminUserInvestment {
+  id: number;
+  loan_id: number;
+  amount_lamports: number;
+  amount_sol: string;
+  amount_eur: string;
+  apr_percent: string;
+  excepted_return: number;
+  excepted_return_sol: string;
+  status: string;
+  created_at: string;
+  loan: {
+    id: number;
+    title: string;
+    status: string;
+  } | null;
 }
 
 export interface AdminLoan {

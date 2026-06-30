@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
-
+import { useState, useEffect, Suspense } from "react";
 import Image from "next/image";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useCookies } from "react-cookie";
 import { toast } from "sonner";
 
@@ -84,277 +85,112 @@ function formatDate(iso: string) {
 function UserDetailDialog({
   user,
   onClose,
-  onStatusChange,
-  onRefresh,
   onViewReferrals,
 }: {
   user: AdminUser;
   onClose: () => void;
-  onStatusChange: (updated: AdminUser) => void;
-  onRefresh?: () => void;
   onViewReferrals?: (user: AdminUser) => void;
 }) {
-  const [cookies] = useCookies(["auth_token"]);
-  const token = cookies.auth_token as string | undefined;
-  const [confirmAction, setConfirmAction] = useState<
-    "suspend" | "activate" | null
-  >(null);
-  const [pending, setPending] = useState(false);
-  
-  const [adjusting, setAdjusting] = useState(false);
-  const [amount, setAmount] = useState("");
-  const [currency, setCurrency] = useState<"sol" | "eur">("sol");
-  const [reason, setReason] = useState("");
-  const [adjustPending, setAdjustPending] = useState(false);
-
-  async function handleStatusUpdate() {
-    if (!token || !confirmAction) return;
-    const newStatus = confirmAction === "suspend" ? "suspended" : "active";
-    setPending(true);
-    try {
-      const res = await howl<ApiResponse<AdminUser>>(
-        `/admin/users/${user.id}/status`,
-        { method: "PATCH", token, body: { status: newStatus } },
-      );
-      toast.success(
-        `User ${newStatus === "active" ? "activated" : "suspended"}.`,
-      );
-      setConfirmAction(null);
-      onStatusChange(res.data);
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Status update failed.");
-    } finally {
-      setPending(false);
-    }
-  }
-
-  async function handleAdjustBalance(e: React.FormEvent) {
-    e.preventDefault();
-    if (!token || !amount || !reason) return;
-    setAdjustPending(true);
-    try {
-      await howl(`/admin/users/${user.id}/balance`, {
-        method: "POST",
-        token,
-        body: {
-          amount: Number(amount),
-          amount_currency: currency,
-          reason,
-        },
-      });
-      toast.success("Balance adjusted successfully.");
-      setAdjusting(false);
-      setAmount("");
-      setReason("");
-      if (onRefresh) onRefresh();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Adjustment failed.");
-    } finally {
-      setAdjustPending(false);
-    }
-  }
-
   return (
-    <>
-      <Dialog
-        open
-        onOpenChange={(o) => {
-          if (!o) onClose();
-        }}
-      >
-        <DialogContent className="sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle>User Details</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            {!adjusting ? (
-              <>
-                <div className="flex items-center gap-3">
-                  <UserAvatar user={user} />
-                  <div>
-                    <p className="text-sm font-semibold">{user.name}</p>
-                    <p className="text-xs text-muted-foreground">{user.email}</p>
-                  </div>
-                </div>
-                <div className="rounded-lg border border-border divide-y divide-border text-sm">
-                  {[
-                    { label: "Role", value: user.role },
-                    { label: "Status", value: user.status },
-                    { label: "Balance", value: `${user.wallet.balance_sol} SOL${user.wallet.balance_eur ? ` (≈ ${user.wallet.balance_eur} €)` : ""}` },
-                    {
-                      label: "Frozen",
-                      value: `${user.wallet.frozen_balance_sol} SOL${user.wallet.frozen_balance_eur ? ` (≈ ${user.wallet.frozen_balance_eur} €)` : ""}`,
-                    },
-                    { label: "Joined", value: formatDate(user.created_at) },
-                  ].map((r) => (
-                    <div key={r.label} className="flex justify-between px-3 py-2">
-                      <span className="text-muted-foreground">{r.label}</span>
-                      <span className="font-medium capitalize">{r.value}</span>
-                    </div>
-                  ))}
-                  <div className="flex justify-between px-3 py-2">
-                    <span className="text-muted-foreground">Email Status</span>
-                    <span className="font-medium flex items-center gap-1.5 text-sm">
-                      {user.email_verified_at ? (
-                        <><CheckCircle2 className="w-4 h-4 text-green-500" /> Verified</>
-                      ) : (
-                        <><XCircle className="w-4 h-4 text-red-500" /> Unverified</>
-                      )}
-                    </span>
-                  </div>
-                  {user.referral_code && (
-                    <div className="flex justify-between px-3 py-2">
-                      <span className="text-muted-foreground">Referral Code</span>
-                      <span className="font-medium capitalize">{user.referral_code}</span>
-                    </div>
-                  )}
-                  {user.referrals_count !== undefined && (
-                    <div className="flex justify-between px-3 py-2">
-                      <span className="text-muted-foreground">Total Referred</span>
-                      {user.referrals_count > 0 && onViewReferrals ? (
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium">{user.referrals_count}</span>
-                          <button
-                            onClick={() => {
-                              onViewReferrals(user);
-                              onClose();
-                            }}
-                            className="text-[10px] font-bold bg-primary/10 text-primary hover:bg-primary/20 px-2 py-0.5 rounded transition-colors"
-                          >
-                            View All
-                          </button>
-                        </div>
-                      ) : (
-                        <span className="font-medium">{user.referrals_count}</span>
-                      )}
-                    </div>
-                  )}
-                  {user.referred_by && (
-                    <div className="flex justify-between px-3 py-2">
-                      <span className="text-muted-foreground">Referred By</span>
-                      <span className="font-medium capitalize">{user.referred_by.name} ({user.referred_by.email})</span>
-                    </div>
-                  )}
-                </div>
-              </>
-            ) : (
-              <form onSubmit={handleAdjustBalance} className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Amount</Label>
-                  <div className="flex gap-2">
-                    <Input 
-                      type="number" 
-                      step="any" 
-                      value={amount} 
-                      onChange={(e) => setAmount(e.target.value)}
-                      placeholder="e.g. 50 or -50"
-                      required
-                    />
-                    <select 
-                      value={currency} 
-                      onChange={(e) => setCurrency(e.target.value as "sol"|"eur")}
-                      className="border border-input rounded-md px-3 text-sm bg-background font-medium"
+    <Dialog open onOpenChange={(o) => { if (!o) onClose(); }}>
+      <DialogContent className="sm:max-w-sm">
+        <DialogHeader>
+          <DialogTitle>Quick View</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <UserAvatar user={user} />
+            <div>
+              <p className="text-sm font-semibold">{user.name}</p>
+              <p className="text-xs text-muted-foreground">{user.email}</p>
+            </div>
+          </div>
+          <div className="rounded-lg border border-border divide-y divide-border text-sm">
+            {[
+              { label: "Role", value: user.role },
+              { label: "Status", value: user.status },
+              { label: "Balance", value: `${user.wallet.balance_sol} SOL${user.wallet.balance_eur ? ` (≈ ${user.wallet.balance_eur} €)` : ""}` },
+              {
+                label: "Frozen",
+                value: `${user.wallet.frozen_balance_sol} SOL${user.wallet.frozen_balance_eur ? ` (≈ ${user.wallet.frozen_balance_eur} €)` : ""}`,
+              },
+              { label: "Joined", value: formatDate(user.created_at) },
+            ].map((r) => (
+              <div key={r.label} className="flex justify-between px-3 py-2">
+                <span className="text-muted-foreground">{r.label}</span>
+                <span className="font-medium capitalize">{r.value}</span>
+              </div>
+            ))}
+            <div className="flex justify-between px-3 py-2">
+              <span className="text-muted-foreground">Email Status</span>
+              <span className="font-medium flex items-center gap-1.5 text-sm">
+                {user.email_verified_at ? (
+                  <><CheckCircle2 className="w-4 h-4 text-green-500" /> Verified</>
+                ) : (
+                  <><XCircle className="w-4 h-4 text-red-500" /> Unverified</>
+                )}
+              </span>
+            </div>
+            {user.referral_code && (
+              <div className="flex justify-between px-3 py-2">
+                <span className="text-muted-foreground">Referral Code</span>
+                <span className="font-medium capitalize">{user.referral_code}</span>
+              </div>
+            )}
+            {user.referrals_count !== undefined && (
+              <div className="flex justify-between px-3 py-2">
+                <span className="text-muted-foreground">Total Referred</span>
+                {user.referrals_count > 0 && onViewReferrals ? (
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium">{user.referrals_count}</span>
+                    <button
+                      onClick={() => {
+                        onViewReferrals(user);
+                        onClose();
+                      }}
+                      className="text-[10px] font-bold bg-primary/10 text-primary hover:bg-primary/20 px-2 py-0.5 rounded transition-colors"
                     >
-                      <option value="sol">SOL</option>
-                      <option value="eur">EUR</option>
-                    </select>
+                      View All
+                    </button>
                   </div>
-                  <p className="text-xs text-muted-foreground">Use negative values to deduct.</p>
-                </div>
-                <div className="space-y-2">
-                  <Label>Reason</Label>
-                  <Input 
-                    value={reason} 
-                    onChange={(e) => setReason(e.target.value)}
-                    placeholder="Why is this being adjusted?"
-                    required
-                    minLength={5}
-                  />
-                </div>
-                <div className="flex justify-end gap-2 pt-2">
-                  <Button type="button" variant="outline" onClick={() => setAdjusting(false)} disabled={adjustPending}>Cancel</Button>
-                  <Button type="submit" disabled={adjustPending}>{adjustPending ? "Saving..." : "Adjust Balance"}</Button>
-                </div>
-              </form>
+                ) : (
+                  <span className="font-medium">{user.referrals_count}</span>
+                )}
+              </div>
+            )}
+            {user.referred_by && (
+              <div className="flex justify-between px-3 py-2">
+                <span className="text-muted-foreground">Referred By</span>
+                <span className="font-medium capitalize">{user.referred_by.name} ({user.referred_by.email})</span>
+              </div>
             )}
           </div>
-          {!adjusting && (
-            <DialogFooter className="sm:justify-between items-center mt-4">
-              <Button type="button" variant="secondary" onClick={() => setAdjusting(true)}>Adjust Balance</Button>
-              <div className="flex items-center gap-2">
-                {user.status === "active" ? (
-                  <Button
-                    variant="outline"
-                    className="text-destructive hover:text-destructive"
-                    onClick={() => setConfirmAction("suspend")}
-                  >
-                    Suspend
-                  </Button>
-                ) : (
-                  <Button
-                    variant="outline"
-                    onClick={() => setConfirmAction("activate")}
-                  >
-                    Activate
-                  </Button>
-                )}
-                <Button variant="outline" onClick={onClose}>
-                  Close
-                </Button>
-              </div>
-            </DialogFooter>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      <AlertDialog
-        open={!!confirmAction}
-        onOpenChange={(o) => {
-          if (!o) setConfirmAction(null);
-        }}
-      >
-        <AlertDialogContent size="sm">
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {confirmAction === "suspend" ? "Suspend" : "Activate"} User
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {confirmAction === "suspend"
-                ? `Suspend ${user.name}? They will lose access to the platform.`
-                : `Activate ${user.name}? They will regain access to the platform.`}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel
-              disabled={pending}
-              onClick={() => setConfirmAction(null)}
-            >
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              variant={confirmAction === "suspend" ? "destructive" : "default"}
-              disabled={pending}
-              onClick={handleStatusUpdate}
-            >
-              {pending
-                ? "Updating…"
-                : confirmAction === "suspend"
-                  ? "Suspend"
-                  : "Activate"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
+        </div>
+        <DialogFooter className="sm:justify-between items-center mt-4">
+          <Link href={`/admin/users/${user.id}`}>
+            <Button variant="default">Full Profile</Button>
+          </Link>
+          <Button variant="outline" onClick={onClose}>
+            Close
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
-export default function UsersPage() {
+function UsersContent() {
+  const searchParams = useSearchParams();
+  const initialRefId = searchParams.get("referrer_id");
+  const initialRefName = searchParams.get("referrer_name");
+
   const [page, setPage] = useState(1);
   const [viewing, setViewing] = useState<AdminUser | null>(null);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [referrerFilter, setReferrerFilter] = useState<AdminUser | null>(null);
+  const [referrerFilter, setReferrerFilter] = useState<Partial<AdminUser> | null>(
+    initialRefId && initialRefName ? { id: Number(initialRefId), name: initialRefName } : null
+  );
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search), 300);
@@ -367,10 +203,7 @@ export default function UsersPage() {
   const lastPage = data?.data?.last_page ?? 1;
   const total = data?.data?.total ?? 0;
 
-  function handleStatusChange(updated: AdminUser) {
-    setViewing(updated);
-    void refetch();
-  }
+
 
   return (
     <div className="p-6 space-y-6">
@@ -479,8 +312,16 @@ export default function UsersPage() {
                       variant="outline"
                       onClick={() => setViewing(user)}
                     >
-                      View
+                      Quick View
                     </Button>
+                    <Link href={`/admin/users/${user.id}`}>
+                      <Button
+                        size="sm"
+                        variant="default"
+                      >
+                        Full Details
+                      </Button>
+                    </Link>
                   </div>
                 </div>
               ))}
@@ -534,11 +375,6 @@ export default function UsersPage() {
         <UserDetailDialog
           user={viewing}
           onClose={() => setViewing(null)}
-          onStatusChange={handleStatusChange}
-          onRefresh={() => {
-            setViewing(null);
-            void refetch();
-          }}
           onViewReferrals={(user) => {
             setReferrerFilter(user);
             setPage(1);
@@ -546,5 +382,13 @@ export default function UsersPage() {
         />
       )}
     </div>
+  );
+}
+
+export default function UsersPage() {
+  return (
+    <Suspense fallback={<div className="p-6">Loading...</div>}>
+      <UsersContent />
+    </Suspense>
   );
 }
