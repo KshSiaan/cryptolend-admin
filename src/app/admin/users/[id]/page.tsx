@@ -9,6 +9,7 @@ import { useCookies } from "react-cookie";
 import { ArrowLeft, CheckCircle2, XCircle } from "lucide-react";
 
 import { useAdminUser, useAdminUserInvestments } from "@/hooks/use-admin-user";
+import { useAdminTransactions } from "@/hooks/use-admin-transactions";
 import { howl } from "@/lib/utils";
 import type { AdminUser } from "@/types/auth";
 import type { ApiResponse } from "@/types/base";
@@ -84,6 +85,14 @@ export default function UserProfilePage() {
   const investments = invData?.data?.data ?? [];
   const invLastPage = invData?.data?.last_page ?? 1;
   const invTotal = invData?.data?.total ?? 0;
+
+  // Pagination state for transactions
+  const [txPage, setTxPage] = useState(1);
+  const { data: txData, isLoading: txLoading } = useAdminTransactions(txPage, id);
+
+  const transactions = txData?.data?.data ?? [];
+  const txLastPage = txData?.data?.last_page ?? 1;
+  const txTotal = txData?.data?.total ?? 0;
 
   // Actions state
   const [pending, setPending] = useState(false);
@@ -164,10 +173,10 @@ export default function UserProfilePage() {
         <h1 className="text-2xl font-semibold tracking-tight">User Profile</h1>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         
         {/* Left Column: Overview & Actions */}
-        <div className="space-y-6 lg:col-span-1">
+        <div className="space-y-6 lg:col-span-1 lg:sticky lg:top-6">
           <Card>
             <CardContent className="p-6 flex flex-col items-center text-center space-y-4">
               <UserAvatar user={user} />
@@ -414,6 +423,78 @@ export default function UserProfilePage() {
                             onClick={() => setInvPage((p) => Math.min(invLastPage, p + 1))}
                             aria-disabled={invPage === invLastPage}
                             className={invPage === invLastPage ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                          />
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-base">Wallet Transactions</CardTitle>
+              <Badge variant="secondary">{txTotal} total</Badge>
+            </CardHeader>
+            <CardContent>
+              {txLoading ? (
+                <div className="flex justify-center p-8">
+                  <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                </div>
+              ) : transactions.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground border border-dashed rounded-lg">
+                  No wallet transactions found for this user.
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    {transactions.map((tx) => (
+                      <div key={tx.id} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-card hover:bg-muted/30 transition-colors border-b last:border-b-0 border-border">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <p className="font-semibold capitalize">{tx.category.replace('_', ' ')}</p>
+                            {tx.meta?.reason && (
+                              <span className="text-sm text-muted-foreground truncate max-w-[200px] sm:max-w-[300px]" title={tx.meta.reason}>
+                                — {tx.meta.reason}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-sm text-muted-foreground mt-1 font-mono">
+                            {tx.direction === "credit" ? "+" : "-"}{tx.amount_sol} SOL
+                          </p>
+                        </div>
+                        <div className="text-left sm:text-right">
+                          <Badge variant="outline" className={`capitalize mb-1 ${tx.status === 'confirmed' ? 'text-green-600 border-green-600' : 'text-yellow-600 border-yellow-600'}`}>{tx.status}</Badge>
+                          <p className="text-xs text-muted-foreground">
+                            {formatDate(tx.created_at)}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {txTotal > 0 && txLastPage > 1 && (
+                    <Pagination>
+                      <PaginationContent>
+                        <PaginationItem>
+                          <PaginationPrevious
+                            onClick={() => setTxPage((p) => Math.max(1, p - 1))}
+                            aria-disabled={txPage === 1}
+                            className={txPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                          />
+                        </PaginationItem>
+                        <PaginationItem>
+                          <span className="px-3 py-2 text-sm">
+                            {txPage} / {txLastPage}
+                          </span>
+                        </PaginationItem>
+                        <PaginationItem>
+                          <PaginationNext
+                            onClick={() => setTxPage((p) => Math.min(txLastPage, p + 1))}
+                            aria-disabled={txPage === txLastPage}
+                            className={txPage === txLastPage ? "pointer-events-none opacity-50" : "cursor-pointer"}
                           />
                         </PaginationItem>
                       </PaginationContent>

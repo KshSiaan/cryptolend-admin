@@ -357,6 +357,11 @@ export interface AdminTransactionListItem {
   status: string;
   amount_sol: string;
   amount_eur?: string;
+  balance_before_sol: string;
+  balance_after_sol: string;
+  tx_signature: string | null;
+  processed_at: string | null;
+  created_at: string;
   user: { id: number; name: string; email: string };
   meta?: { reason?: string; [key: string]: any } | null;
 }
