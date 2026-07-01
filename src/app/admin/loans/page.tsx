@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useCookies } from "react-cookie";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 
 import {
   AlertDialog,
@@ -64,6 +65,14 @@ const editableLoanStatuses: EditableLoanStatus[] = [
   "repaying",
   "closed",
 ];
+
+const LOAN_STATUS_TRANSITIONS: Record<string, EditableLoanStatus[]> = {
+  active: ["funded", "funding_failed", "repaying"], // "repaying" is a frontend shortcut
+  funded: ["repaying"],
+  funding_failed: [],
+  repaying: ["closed"],
+  closed: [],
+};
 
 const loanStatusFilters: LoanStatus[] = ["all", ...editableLoanStatuses];
 
@@ -372,6 +381,7 @@ function EditDialog({
   const token = cookies.auth_token as string | undefined;
 
   const financiallyLocked = !["active"].includes(loan.status);
+  const allowedNextStatuses = LOAN_STATUS_TRANSITIONS[loan.status] || [];
 
   const [form, setForm] = useState<LoanFormState>({
     title: loan.title,
@@ -426,11 +436,26 @@ function EditDialog({
       });
 
       if (statusVal !== loan.status) {
-        await howl<ApiResponse<unknown>>(`/admin/loans/${loan.id}/status`, {
-          method: "PATCH",
-          token,
-          body: { status: statusVal },
-        });
+        if (loan.status === "active" && statusVal === "repaying") {
+          // Frontend shortcut: transition to funded first, then repaying
+          await howl<ApiResponse<unknown>>(`/admin/loans/${loan.id}/status`, {
+            method: "PATCH",
+            token,
+            body: { status: "funded" },
+          });
+          await howl<ApiResponse<unknown>>(`/admin/loans/${loan.id}/status`, {
+            method: "PATCH",
+            token,
+            body: { status: "repaying" },
+          });
+        } else {
+          // Normal transition
+          await howl<ApiResponse<unknown>>(`/admin/loans/${loan.id}/status`, {
+            method: "PATCH",
+            token,
+            body: { status: statusVal },
+          });
+        }
       }
 
       toast.success("Loan updated.");
@@ -476,7 +501,10 @@ function EditDialog({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {editableLoanStatuses.map((s) => (
+              <SelectItem value={loan.status}>
+                {formatStatusLabel(loan.status)} (Current)
+              </SelectItem>
+              {allowedNextStatuses.map((s) => (
                 <SelectItem key={s} value={s}>
                   {formatStatusLabel(s)}
                 </SelectItem>
@@ -588,6 +616,7 @@ function formatFundingEndsAt(value?: string | null) {
 }
 
 export default function LoansPage() {
+  const queryClient = useQueryClient();
   const [status, setStatus] = useState<LoanStatus>("all");
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
@@ -595,7 +624,7 @@ export default function LoansPage() {
   const [editing, setEditing] = useState<AdminLoan | null>(null);
   const [deleting, setDeleting] = useState<AdminLoan | null>(null);
 
-  const { data, isLoading, refetch } = useAdminLoans(status, page);
+  const { data, isLoading } = useAdminLoans(status, page);
 
   const loans = data?.data?.data ?? [];
   const lastPage = data?.data?.last_page ?? 1;
@@ -787,7 +816,7 @@ export default function LoansPage() {
           onClose={() => setCreating(false)}
           onSuccess={() => {
             setCreating(false);
-            refetch();
+            queryClient.invalidateQueries({ queryKey: ["admin-loans"] });
           }}
         />
       )}
@@ -798,7 +827,7 @@ export default function LoansPage() {
           onClose={() => setEditing(null)}
           onSuccess={() => {
             setEditing(null);
-            refetch();
+            queryClient.invalidateQueries({ queryKey: ["admin-loans"] });
           }}
         />
       )}
@@ -809,7 +838,7 @@ export default function LoansPage() {
           onClose={() => setDeleting(null)}
           onSuccess={() => {
             setDeleting(null);
-            void refetch();
+            queryClient.invalidateQueries({ queryKey: ["admin-loans"] });
           }}
         />
       )}

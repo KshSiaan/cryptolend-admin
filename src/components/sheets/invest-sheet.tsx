@@ -49,16 +49,13 @@ export function InvestSheet({
   const solVal = parseFloat(solAmount) || 0;
   const eurVal = parseFloat(eurAmount) || 0;
   const aprDecimal = loan.apr_percent / 100;
-  const monthlyPayment =
-    solVal > 0 ? (solVal * aprDecimal) / 12 + solVal / loan.duration_months : 0;
-  const totalInterest =
-    solVal > 0 ? ((solVal * aprDecimal) / 12) * loan.duration_months : 0;
+  const totalInterest = solVal > 0 ? solVal * aprDecimal : 0;
   const totalReturn = solVal + totalInterest;
-  const monthlyPaymentEur =
-    eurVal > 0 ? (eurVal * aprDecimal) / 12 + eurVal / loan.duration_months : 0;
-  const totalInterestEur =
-    eurVal > 0 ? ((eurVal * aprDecimal) / 12) * loan.duration_months : 0;
+  const monthlyPayment = solVal > 0 ? totalReturn / loan.duration_months : 0;
+  
+  const totalInterestEur = eurVal > 0 ? eurVal * aprDecimal : 0;
   const totalReturnEur = eurVal + totalInterestEur;
+  const monthlyPaymentEur = eurVal > 0 ? totalReturnEur / loan.duration_months : 0;
 
   // EUR → SOL conversion (debounced, only when EUR mode)
   useEffect(() => {
