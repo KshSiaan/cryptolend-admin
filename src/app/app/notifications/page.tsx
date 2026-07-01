@@ -102,10 +102,71 @@ function notificationMeta(n: Notification): {
     };
   }
 
+  if (d.type === "loan_funding_status") {
+    const isFunded = d.status === "funded";
+    return {
+      title: isFunded ? "Loan Funding Successful" : "Loan Funding Unsuccessful",
+      description: isFunded
+        ? `The loan ${loanLabel} reached its target amount and has been funded.`
+        : `The loan ${loanLabel} did not reach its target before the deadline.`,
+      icon: isFunded ? <CheckCircle2 className="h-4 w-4 text-green-500" /> : <XCircle className="h-4 w-4 text-destructive" />,
+      variant: isFunded ? "default" : "destructive",
+    };
+  }
+
+  if (d.type === "loan_repaying_started") {
+    return {
+      title: "Loan Repayment Started",
+      description: `The loan ${loanLabel} has started its repayment phase.`,
+      icon: <CheckCircle2 className="h-4 w-4 text-green-500" />,
+      variant: "default",
+    };
+  }
+
+  if (d.type === "withdrawal_lifecycle") {
+    const isApproved = d.status === "approved";
+    return {
+      title: isApproved ? "Withdrawal Approved" : "Withdrawal Submitted",
+      description: isApproved
+        ? `${d.amount_sol} SOL withdrawal request has been approved and is being processed.`
+        : `${d.amount_sol} SOL withdrawal request has been submitted and is pending admin review.`,
+      icon: isApproved ? <CheckCircle2 className="h-4 w-4 text-green-500" /> : <Clock className="h-4 w-4 text-orange-400" />,
+      variant: "default",
+    };
+  }
+
+  if (d.type === "withdrawal_status") {
+    const isConfirmed = d.status === "confirmed";
+    return {
+      title: isConfirmed ? "Withdrawal Confirmed" : "Withdrawal Failed",
+      description: isConfirmed
+        ? `${d.amount_sol} SOL withdrawal has been confirmed on-chain.`
+        : d.failure_reason ? `Withdrawal failed: ${d.failure_reason}` : "Your withdrawal could not be completed.",
+      icon: isConfirmed ? <CheckCircle2 className="h-4 w-4 text-green-500" /> : <XCircle className="h-4 w-4 text-destructive" />,
+      variant: isConfirmed ? "default" : "destructive",
+    };
+  }
+
+  if (d.type === "admin_wallet_update") {
+    const adj = Number(d.adjustment_amount_sol) > 0 ? `+${d.adjustment_amount_sol}` : d.adjustment_amount_sol;
+    return {
+      title: "Account Balance Adjustment",
+      description: `Adjustment: ${adj} SOL. New balance: ${d.new_balance_sol} SOL. Reason: ${d.reason}`,
+      icon: <Info className="h-4 w-4 text-blue-500" />,
+      variant: "default",
+    };
+  }
+
   const raw = n.type.split("\\").pop() ?? n.type;
+  
+  const details = [];
+  if (d.amount_sol) details.push(`${d.amount_sol} SOL`);
+  if (d.status) details.push(`Status: ${d.status}`);
+  if (loanLabel !== "this loan") details.push(`Loan: ${loanLabel}`);
+  
   return {
     title: raw.replace(/([A-Z])/g, " $1").trim(),
-    description: JSON.stringify(d),
+    description: details.length > 0 ? details.join(" | ") : "New notification received.",
     icon: <Bell className="h-4 w-4" />,
     variant: "default",
   };
