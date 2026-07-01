@@ -473,6 +473,7 @@ export interface AdminUserInvestment {
   apr_percent: string;
   excepted_return: number;
   excepted_return_sol: string;
+  excepted_return_eur?: string;
   status: string;
   created_at: string;
   loan: {

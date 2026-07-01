@@ -644,17 +644,17 @@ export default function LoansPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center gap-3 flex-wrap">
-        <h1 className="text-2xl font-semibold tracking-tight flex-1">Loans</h1>
+    <div className="p-4 sm:p-6 space-y-6">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-wrap">
+        <h1 className="text-2xl font-semibold tracking-tight sm:flex-1">Loans</h1>
         <Input
           placeholder="Search title or loan number…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-64 bg-background"
+          className="w-full sm:w-64 bg-background"
         />
         <Select value={status} onValueChange={handleStatusChange}>
-          <SelectTrigger className="w-44">
+          <SelectTrigger className="w-full sm:w-44">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -665,7 +665,7 @@ export default function LoansPage() {
             ))}
           </SelectContent>
         </Select>
-        <Button onClick={() => setCreating(true)}>New Loan</Button>
+        <Button className="w-full sm:w-auto" onClick={() => setCreating(true)}>New Loan</Button>
       </div>
 
       <Card className="shadow-none">
@@ -678,8 +678,7 @@ export default function LoansPage() {
             </div>
           ) : filtered.length === 0 ? (
             <div className="p-10 text-center text-sm text-muted-foreground">
-              No {status === "all" ? "" : `${formatStatusLabel(status)} `}loans
-              found.
+              No {status === "all" ? "" : `${formatStatusLabel(status)} `}loans found.
             </div>
           ) : (
             <div className="divide-y divide-border">
@@ -688,9 +687,9 @@ export default function LoansPage() {
                 return (
                   <div
                     key={loan.id}
-                    className="px-5 py-4 flex items-center justify-between gap-4"
+                    className="px-5 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
                   >
-                    <div className="min-w-0 flex-1 space-y-1">
+                    <div className="min-w-0 flex-1 space-y-1 w-full">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-xs text-muted-foreground font-mono">
                           {loan.loan_number}
@@ -728,14 +727,14 @@ export default function LoansPage() {
                           </span>
                         </div>
                       </div>
-                      <div className="w-full max-w-xs h-1.5 rounded-full bg-muted overflow-hidden">
+                      <div className="w-full max-w-xs h-1.5 rounded-full bg-muted overflow-hidden mt-2">
                         <div
                           className="h-full bg-primary rounded-full"
                           style={{ width: `${pct}%` }}
                         />
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 shrink-0">
+                    <div className="flex items-center flex-wrap sm:flex-nowrap gap-2 w-full sm:w-auto shrink-0 mt-3 sm:mt-0">
                       <Badge
                         className={`${statusBadge[loan.status] ?? ""} border-0 capitalize`}
                       >

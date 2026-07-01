@@ -27,24 +27,29 @@ const statusBadge: Record<string, string> = {
 };
 
 function UserAvatar({ user, className = "size-8" }: { user: any; className?: string }) {
+  const [error, setError] = useState(false);
   const photoUrl = user?.profile_photo_url || user?.profile_photo_path;
-  if (photoUrl) {
+  
+  if (photoUrl && !error) {
     return (
-      <Image
+      <img
         src={photoUrl}
         alt={user.name ?? ""}
         width={32}
         height={32}
         className={`${className} rounded-full object-cover shrink-0 border border-border`}
+        onError={() => setError(true)}
       />
     );
   }
+
   const initials = (user?.name ?? "?")
     .split(" ")
     .map((n: string) => n[0])
     .join("")
     .slice(0, 2)
     .toUpperCase();
+  
   return (
     <div className={`${className} rounded-full bg-muted flex items-center justify-center shrink-0 border border-border`}>
       <span className="text-sm font-semibold text-muted-foreground">
@@ -193,29 +198,49 @@ export default function AdminLoanBreakdownPage() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-center">
-                <div className="space-y-1 p-3 bg-muted/30 rounded-lg border overflow-hidden">
+                <div className="space-y-1 p-3 bg-muted/30 rounded-lg border overflow-hidden flex flex-col justify-center">
                   <div className="text-[10px] sm:text-xs text-muted-foreground font-medium uppercase tracking-wider truncate">Target</div>
                   <div className="text-sm sm:text-base font-bold truncate" title={`${loan.target_amount_sol} SOL`}>
                     {loan.target_amount_sol} <span className="text-[10px] sm:text-xs font-normal">SOL</span>
                   </div>
+                  {loan.target_amount_eur && (
+                    <div className="text-[10px] sm:text-xs font-normal text-muted-foreground opacity-75 truncate" title={`${loan.target_amount_eur} €`}>
+                      ≈ {loan.target_amount_eur} €
+                    </div>
+                  )}
                 </div>
-                <div className="space-y-1 p-3 bg-muted/30 rounded-lg border overflow-hidden">
+                <div className="space-y-1 p-3 bg-muted/30 rounded-lg border overflow-hidden flex flex-col justify-center">
                   <div className="text-[10px] sm:text-xs text-muted-foreground font-medium uppercase tracking-wider truncate">Initial</div>
                   <div className="text-sm sm:text-base font-bold truncate" title={`${loan.initial_funded_amount_sol || 0} SOL`}>
                     {loan.initial_funded_amount_sol || 0} <span className="text-[10px] sm:text-xs font-normal">SOL</span>
                   </div>
+                  {loan.initial_funded_amount_eur && (
+                    <div className="text-[10px] sm:text-xs font-normal text-muted-foreground opacity-75 truncate" title={`${loan.initial_funded_amount_eur} €`}>
+                      ≈ {loan.initial_funded_amount_eur} €
+                    </div>
+                  )}
                 </div>
-                <div className="space-y-1 p-3 bg-muted/30 rounded-lg border overflow-hidden">
+                <div className="space-y-1 p-3 bg-muted/30 rounded-lg border overflow-hidden flex flex-col justify-center">
                   <div className="text-[10px] sm:text-xs text-muted-foreground font-medium uppercase tracking-wider truncate">Invested</div>
                   <div className="text-sm sm:text-base font-bold truncate" title={`${loan.investor_funded_amount_sol || 0} SOL`}>
                     {loan.investor_funded_amount_sol || 0} <span className="text-[10px] sm:text-xs font-normal">SOL</span>
                   </div>
+                  {loan.investor_funded_amount_eur && (
+                    <div className="text-[10px] sm:text-xs font-normal text-muted-foreground opacity-75 truncate" title={`${loan.investor_funded_amount_eur} €`}>
+                      ≈ {loan.investor_funded_amount_eur} €
+                    </div>
+                  )}
                 </div>
-                <div className="space-y-1 p-3 bg-muted/30 rounded-lg border overflow-hidden">
+                <div className="space-y-1 p-3 bg-muted/30 rounded-lg border overflow-hidden flex flex-col justify-center">
                   <div className="text-[10px] sm:text-xs text-muted-foreground font-medium uppercase tracking-wider truncate">Total</div>
                   <div className="text-sm sm:text-base font-bold text-primary truncate" title={`${loan.total_funded_amount_sol || 0} SOL`}>
                     {loan.total_funded_amount_sol || 0} <span className="text-[10px] sm:text-xs font-normal">SOL</span>
                   </div>
+                  {loan.total_funded_amount_eur && (
+                    <div className="text-[10px] sm:text-xs font-normal text-muted-foreground opacity-75 truncate" title={`${loan.total_funded_amount_eur} €`}>
+                      ≈ {loan.total_funded_amount_eur} €
+                    </div>
+                  )}
                 </div>
                 <div className="space-y-1 p-3 bg-muted/30 rounded-lg border overflow-hidden">
                   <div className="text-[10px] sm:text-xs text-muted-foreground font-medium uppercase tracking-wider truncate">APR</div>
@@ -278,11 +303,25 @@ export default function AdminLoanBreakdownPage() {
                           <div className="text-xs text-muted-foreground truncate">{inv.user?.email ?? ""}</div>
                         </div>
                       </div>
-                      <div className="col-span-3 text-right font-medium text-primary">
-                        {formatLamports(inv.amount_lamports)} <span className="text-[10px] uppercase">SOL</span>
+                      <div className="col-span-3 text-right font-medium text-primary flex flex-col items-end">
+                        <div>
+                          {formatLamports(inv.amount_lamports)} <span className="text-[10px] uppercase">SOL</span>
+                        </div>
+                        {inv.amount_eur && (
+                          <div className="text-[10px] sm:text-xs font-normal text-muted-foreground opacity-75 mt-0.5 truncate" title={`${inv.amount_eur} €`}>
+                            ≈ {inv.amount_eur} €
+                          </div>
+                        )}
                       </div>
-                      <div className="col-span-3 text-right font-medium text-green-600 hidden sm:block">
-                        {formatLamports(inv.excepted_return)} <span className="text-[10px] uppercase">SOL</span>
+                      <div className="col-span-3 text-right font-medium text-green-600 hidden sm:flex flex-col items-end">
+                        <div>
+                          {formatLamports(inv.excepted_return)} <span className="text-[10px] uppercase">SOL</span>
+                        </div>
+                        {inv.excepted_return_eur && (
+                          <div className="text-[10px] sm:text-xs font-normal text-muted-foreground opacity-75 mt-0.5 truncate" title={`${inv.excepted_return_eur} €`}>
+                            ≈ {inv.excepted_return_eur} €
+                          </div>
+                        )}
                       </div>
                       <div className="col-span-4 sm:col-span-2 text-right text-muted-foreground text-xs">
                         {formatDate(inv.created_at)}

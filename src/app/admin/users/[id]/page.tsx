@@ -397,6 +397,9 @@ export default function UserProfilePage() {
                           <Badge variant="outline" className="capitalize mb-1">{inv.status}</Badge>
                           <p className="text-sm font-medium text-green-pos">
                             +{inv.excepted_return_sol} SOL Expected
+                            {inv.excepted_return_eur && (
+                              <span className="text-xs text-muted-foreground font-normal ml-1">(≈ {inv.excepted_return_eur} €)</span>
+                            )}
                           </p>
                         </div>
                       </div>
