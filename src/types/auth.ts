@@ -406,6 +406,7 @@ export interface AdminDeposit {
   input_amount?: string | null;
   input_currency?: string | null;
   amount_eur?: string | null;
+  amount_sol?: string | null;
   tx_signature: string | null;
   from_address: string;
   to_address: string;
