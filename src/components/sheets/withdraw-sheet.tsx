@@ -46,7 +46,7 @@ export function WithdrawSheet({
 
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<Step>("form");
-  const [currency, setCurrency] = useState<"sol" | "eur">("sol");
+  const [currency, setCurrency] = useState<"sol" | "eur">("eur");
   const [amount, setAmount] = useState("");
   const [address, setAddress] = useState("");
   const [isPending, setIsPending] = useState(false);

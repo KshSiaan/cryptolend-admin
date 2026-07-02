@@ -105,7 +105,7 @@ export default function HomePage() {
               Deposit
             </button>
           </DepositSheet>
-          <WithdrawSheet availableSol={balanceSol}>
+          <WithdrawSheet availableSol={balanceSol} availableEur={balanceEur}>
             <button
               type="button"
               className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-white/15 hover:bg-white/25 transition-colors px-4 py-2.5 text-sm font-medium text-background"
