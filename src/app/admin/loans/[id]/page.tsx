@@ -17,6 +17,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import Image from "next/image";
+import { formatSol } from "@/lib/utils";
 
 const statusBadge: Record<string, string> = {
   active: "bg-blue-100 text-blue-700",
@@ -77,10 +78,7 @@ function formatDate(dateStr?: string | null) {
 }
 
 function formatLamports(lamports: number | string) {
-  return (Number(lamports) / 1_000_000_000).toLocaleString(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 4,
-  });
+  return formatSol(Number(lamports) / 1_000_000_000);
 }
 
 export default function AdminLoanBreakdownPage() {
@@ -200,8 +198,8 @@ export default function AdminLoanBreakdownPage() {
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-center">
                 <div className="space-y-1 p-3 bg-muted/30 rounded-lg border overflow-hidden flex flex-col justify-center">
                   <div className="text-[10px] sm:text-xs text-muted-foreground font-medium uppercase tracking-wider truncate">Target</div>
-                  <div className="text-sm sm:text-base font-bold truncate" title={`${loan.target_amount_sol} SOL`}>
-                    {loan.target_amount_sol} <span className="text-[10px] sm:text-xs font-normal">SOL</span>
+                  <div className="text-sm sm:text-base font-bold truncate" title={`${formatSol(loan.target_amount_sol)} SOL`}>
+                    {formatSol(loan.target_amount_sol)} <span className="text-[10px] sm:text-xs font-normal">SOL</span>
                   </div>
                   {loan.target_amount_eur && (
                     <div className="text-[10px] sm:text-xs font-normal text-muted-foreground opacity-75 truncate" title={`${loan.target_amount_eur} €`}>
@@ -211,8 +209,8 @@ export default function AdminLoanBreakdownPage() {
                 </div>
                 <div className="space-y-1 p-3 bg-muted/30 rounded-lg border overflow-hidden flex flex-col justify-center">
                   <div className="text-[10px] sm:text-xs text-muted-foreground font-medium uppercase tracking-wider truncate">Initial</div>
-                  <div className="text-sm sm:text-base font-bold truncate" title={`${loan.initial_funded_amount_sol || 0} SOL`}>
-                    {loan.initial_funded_amount_sol || 0} <span className="text-[10px] sm:text-xs font-normal">SOL</span>
+                  <div className="text-sm sm:text-base font-bold truncate" title={`${formatSol(loan.initial_funded_amount_sol || 0)} SOL`}>
+                    {formatSol(loan.initial_funded_amount_sol || 0)} <span className="text-[10px] sm:text-xs font-normal">SOL</span>
                   </div>
                   {loan.initial_funded_amount_eur && (
                     <div className="text-[10px] sm:text-xs font-normal text-muted-foreground opacity-75 truncate" title={`${loan.initial_funded_amount_eur} €`}>
@@ -222,8 +220,8 @@ export default function AdminLoanBreakdownPage() {
                 </div>
                 <div className="space-y-1 p-3 bg-muted/30 rounded-lg border overflow-hidden flex flex-col justify-center">
                   <div className="text-[10px] sm:text-xs text-muted-foreground font-medium uppercase tracking-wider truncate">Invested</div>
-                  <div className="text-sm sm:text-base font-bold truncate" title={`${loan.investor_funded_amount_sol || 0} SOL`}>
-                    {loan.investor_funded_amount_sol || 0} <span className="text-[10px] sm:text-xs font-normal">SOL</span>
+                  <div className="text-sm sm:text-base font-bold truncate" title={`${formatSol(loan.investor_funded_amount_sol || 0)} SOL`}>
+                    {formatSol(loan.investor_funded_amount_sol || 0)} <span className="text-[10px] sm:text-xs font-normal">SOL</span>
                   </div>
                   {loan.investor_funded_amount_eur && (
                     <div className="text-[10px] sm:text-xs font-normal text-muted-foreground opacity-75 truncate" title={`${loan.investor_funded_amount_eur} €`}>
@@ -233,8 +231,8 @@ export default function AdminLoanBreakdownPage() {
                 </div>
                 <div className="space-y-1 p-3 bg-muted/30 rounded-lg border overflow-hidden flex flex-col justify-center">
                   <div className="text-[10px] sm:text-xs text-muted-foreground font-medium uppercase tracking-wider truncate">Total</div>
-                  <div className="text-sm sm:text-base font-bold text-primary truncate" title={`${loan.total_funded_amount_sol || 0} SOL`}>
-                    {loan.total_funded_amount_sol || 0} <span className="text-[10px] sm:text-xs font-normal">SOL</span>
+                  <div className="text-sm sm:text-base font-bold text-primary truncate" title={`${formatSol(loan.total_funded_amount_sol || 0)} SOL`}>
+                    {formatSol(loan.total_funded_amount_sol || 0)} <span className="text-[10px] sm:text-xs font-normal">SOL</span>
                   </div>
                   {loan.total_funded_amount_eur && (
                     <div className="text-[10px] sm:text-xs font-normal text-muted-foreground opacity-75 truncate" title={`${loan.total_funded_amount_eur} €`}>

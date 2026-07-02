@@ -2,7 +2,7 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { useAdminDashboardStats } from "@/hooks/use-admin-dashboard-stats";
-import { cn } from "@/lib/utils";
+import { cn, formatSol } from "@/lib/utils";
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-US", {
@@ -31,13 +31,13 @@ export default function DashboardPage() {
         },
         {
           label: "Total invested",
-          value: `${stats.total_invested_sol} SOL`,
+          value: `${formatSol(stats.total_invested_sol)} SOL`,
           subValue: stats.total_invested_eur ? `≈ ${stats.total_invested_eur} €` : null,
           valueClass: "",
         },
         {
           label: `Repaid this month (${stats.month})`,
-          value: `${stats.total_repaid_this_month_sol} SOL`,
+          value: `${formatSol(stats.total_repaid_this_month_sol)} SOL`,
           subValue: stats.total_repaid_this_month_eur ? `≈ ${stats.total_repaid_this_month_eur} €` : null,
           valueClass: "text-green-pos",
         },
@@ -108,7 +108,7 @@ export default function DashboardPage() {
                   >
                     <span>
                       {tx.direction === "credit" ? "+" : "-"}
-                      {tx.amount_sol} SOL
+                      {formatSol(tx.amount_sol)} SOL
                     </span>
                     {tx.amount_eur && (
                       <span className="text-xs font-medium opacity-75">

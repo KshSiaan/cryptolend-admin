@@ -14,6 +14,7 @@ import { useActiveLoans } from "@/hooks/use-active-loans";
 import { useEarningsHistory } from "@/hooks/use-earnings-history";
 import { useInvestmentStats } from "@/hooks/use-investment-stats";
 import { useProfile } from "@/hooks/use-profile";
+import { formatSol } from "@/lib/utils";
 
 export default function PortfolioPage() {
   const [investPage, setInvestPage] = useState(1);
@@ -64,7 +65,7 @@ export default function PortfolioPage() {
               Balance
             </p>
             <p className="text-sm font-bold">
-              {profile?.wallet_balance_sol ?? "0"} SOL
+              {formatSol(profile?.wallet_balance_sol)} SOL
             </p>
             <p className="text-sm font-bold">
               {profile?.wallet_balance_eur ?? "0"} €
@@ -83,7 +84,7 @@ export default function PortfolioPage() {
             Earnings
           </p>
           <p className="text-2xl font-bold mt-1 text-green-pos">
-            {stats?.earning_sol ?? "0"}
+            {formatSol(stats?.earning_sol)}
           </p>
           <p className="text-xs text-muted-foreground">SOL total</p>
           <p className="text-sm font-semibold mt-1 text-muted-foreground">
@@ -109,7 +110,7 @@ export default function PortfolioPage() {
               Expected interest
             </p>
             <p className="text-lg font-bold text-green-pos mt-0.5">
-              +{stats.total_expected_interest_sol} SOL
+              +{formatSol(stats.total_expected_interest_sol)} SOL
             </p>
             <p className="text-sm font-semibold text-muted-foreground">
               +{stats.total_expected_interest_eur} €
@@ -120,7 +121,7 @@ export default function PortfolioPage() {
               Invested balance
             </p>
             <p className="text-lg font-bold mt-0.5">
-              {stats.invested_balance_sol} SOL
+              {formatSol(stats.invested_balance_sol)} SOL
             </p>
             <p className="text-sm font-semibold text-muted-foreground">
               {stats.invested_balance_eur} €
@@ -176,7 +177,7 @@ export default function PortfolioPage() {
                           Total Expected
                         </p>
                         <p className="text-lg font-bold text-green-pos leading-tight">
-                          +{inv.expected_return_sol}
+                          +{formatSol(inv.expected_return_sol)}
                         </p>
                         <p className="text-[9px] text-muted-foreground">SOL</p>
                         <p className="text-sm font-semibold text-muted-foreground">
@@ -198,7 +199,7 @@ export default function PortfolioPage() {
                       {[
                         {
                           label: "INVESTED",
-                          value: `${inv.amount_sol}`,
+                          value: `${formatSol(inv.amount_sol)}`,
                           subValue: `${inv.amount_eur}`,
                           className: "",
                         },
@@ -216,13 +217,13 @@ export default function PortfolioPage() {
                         },
                         {
                           label: "RECEIVED",
-                          value: `+${inv.received_sol}`,
+                          value: `+${formatSol(inv.received_sol)}`,
                           subValue: `+${inv.received_eur}`,
                           className: "text-green-pos",
                         },
                         {
                           label: "REMAINING",
-                          value: `${(parseFloat(inv.expected_return_sol) - parseFloat(inv.received_sol)).toFixed(6)}`,
+                          value: `${formatSol(parseFloat(inv.expected_return_sol) - parseFloat(inv.received_sol))}`,
                           subValue: `${(parseFloat(inv.expected_return_eur) - parseFloat(inv.received_eur)).toFixed(2)}`,
                           className: "",
                         },
@@ -254,7 +255,7 @@ export default function PortfolioPage() {
                         {inv.return_schedules.map((s) => (
                           <span
                             key={s.id}
-                            title={`${s.month_label} · ${s.total_due_sol} SOL · ${s.total_due_eur} € · ${s.due_date}`}
+                            title={`${s.month_label} · ${formatSol(s.total_due_sol)} SOL · ${s.total_due_eur} € · ${s.due_date}`}
                             className={[
                               "rounded-lg px-2.5 py-1.5 text-[11px] font-semibold",
                               s.status === "paid"
@@ -276,7 +277,7 @@ export default function PortfolioPage() {
                         {dueSchedule && (
                           <span className="flex items-center gap-1">
                             <span className="w-2 h-2 rounded-full bg-amber-400 inline-block" />
-                            Due · +{dueSchedule.total_due_sol} SOL |{" "}
+                            Due · +{formatSol(dueSchedule.total_due_sol)} SOL |{" "}
                             {dueSchedule.total_due_eur}€
                           </span>
                         )}
@@ -351,7 +352,7 @@ export default function PortfolioPage() {
                   <p className="text-sm font-medium">{entry.month}</p>
                   <div className="text-right">
                     <p className="text-sm font-semibold text-green-pos">
-                      +{entry.amount_sol} SOL
+                      +{formatSol(entry.amount_sol)} SOL
                     </p>
                     <p className="text-sm font-semibold text-muted-foreground">
                       +{entry.amount_eur} €
@@ -448,7 +449,7 @@ export default function PortfolioPage() {
                     <span>
                       Target{" "}
                       <span className="font-bold">
-                        {loan.target_amount_sol} SOL
+                        {formatSol(loan.target_amount_sol)} SOL
                       </span>
                       <span className="block text-xs text-muted-foreground">
                         {loan.target_amount_eur} €
@@ -457,7 +458,7 @@ export default function PortfolioPage() {
                     <span>
                       Raised{" "}
                       <span className="font-bold">
-                        {loan.raised_amount_sol} SOL
+                        {formatSol(loan.raised_amount_sol)} SOL
                       </span>
                       <span className="block text-xs text-muted-foreground">
                         {loan.raised_amount_eur} €

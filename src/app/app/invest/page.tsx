@@ -5,7 +5,7 @@ import { LoanDetailSheet } from "@/components/sheets/loan-detail-sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useLoans } from "@/hooks/use-loans";
 import { useProfile } from "@/hooks/use-profile";
-import { cn } from "@/lib/utils";
+import { cn, formatSol } from "@/lib/utils";
 import { useEffect, useState } from "react";
 
 const statusStyles: Record<string, { badge: string; label: string }> = {
@@ -50,7 +50,7 @@ export default function InvestPage() {
               Balance
             </p>
             <p className="text-sm font-bold">
-              {profile?.wallet_balance_sol ?? "0"} SOL
+              {formatSol(profile?.wallet_balance_sol)} SOL
             </p>
           </div>
           <Avatar className="w-10 h-10">
@@ -107,7 +107,7 @@ export default function InvestPage() {
                   <span>
                     Target{" "}
                     <span className="font-bold">
-                      {loan.target_amount_sol} SOL
+                      {formatSol(loan.target_amount_sol)} SOL
                     </span>
                     <div className="font-bold text-xs text-muted-foreground">
                       {loan.target_amount_eur} €
@@ -116,7 +116,7 @@ export default function InvestPage() {
                   <span>
                     Raised{" "}
                     <span className="font-bold">
-                      {loan.raised_amount_sol} SOL
+                      {formatSol(loan.raised_amount_sol)} SOL
                     </span>
                                         <div className="font-bold text-xs text-muted-foreground">
                       {loan.raised_amount_eur} €

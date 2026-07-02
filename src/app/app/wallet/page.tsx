@@ -23,7 +23,7 @@ import {
 import { useWalletStats } from "@/hooks/use-wallet-stats";
 import { useWalletTransactions } from "@/hooks/use-wallet-transactions";
 import { useWithdrawalRequests } from "@/hooks/use-withdrawal-requests";
-import { cn } from "@/lib/utils";
+import { cn, formatSol } from "@/lib/utils";
 
 const statusBadge: Record<string, string> = {
   confirmed: "bg-green-100 text-green-700",
@@ -84,7 +84,7 @@ export default function WalletPage() {
           ) : (
             <>
               <p className="text-2xl font-bold mt-1">
-                {stats ? parseFloat(stats.available_sol).toFixed(4) : "—"}
+                {stats ? formatSol(stats.available_sol) : "—"}
               </p>
               <p className="text-xs text-muted-foreground">SOL</p>
               <p className="text-sm font-semibold text-muted-foreground">
@@ -102,7 +102,7 @@ export default function WalletPage() {
           ) : (
             <>
               <p className="text-2xl font-bold mt-1">
-                {stats ? parseFloat(stats.invested_sol).toFixed(4) : "—"}
+                {stats ? formatSol(stats.invested_sol) : "—"}
               </p>
               <p className="text-xs text-muted-foreground">SOL</p>
               <p className="text-sm font-semibold text-muted-foreground">
@@ -163,7 +163,7 @@ export default function WalletPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-base font-bold">
-                      {parseFloat(w.amount_sol).toFixed(4)} SOL
+                      {formatSol(w.amount_sol)} SOL
                     </p>
                     <p className="text-sm font-semibold text-muted-foreground">
                       {w.amount_eur} €
@@ -255,7 +255,7 @@ export default function WalletPage() {
                         ) : (
                           <>
                             {tx.direction === "credit" ? "+" : "−"}
-                            {tx.amount_sol} SOL
+                            {formatSol(tx.amount_sol)} SOL
                           </>
                         )}
                       </p>

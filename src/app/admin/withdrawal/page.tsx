@@ -32,7 +32,7 @@ import {
   type AdminWithdrawalStatus,
   useAdminWithdrawalRequests,
 } from "@/hooks/use-admin-withdrawal-requests";
-import { howl } from "@/lib/utils";
+import { howl, formatSol } from "@/lib/utils";
 import type { AdminWithdrawalRequest } from "@/types/auth";
 import type { ApiResponse } from "@/types/base";
 
@@ -170,7 +170,7 @@ function ReviewDialog({
             {[
               { label: "User", value: `${req.user.name}` },
               { label: "Email", value: req.user.email },
-              { label: "Amount", value: `${req.amount_sol} SOL${req.amount_eur ? ` (≈ ${req.amount_eur} €)` : ""}` },
+              { label: "Amount", value: `${formatSol(req.amount_sol)} SOL${req.amount_eur ? ` (≈ ${req.amount_eur} €)` : ""}` },
               { label: "To", value: req.recipient_address },
               { label: "Submitted", value: formatDate(req.created_at) },
               { label: "Status", value: req.status },
@@ -313,7 +313,7 @@ export default function WithdrawalPage() {
                     </div>
                     <div className="flex items-center gap-4 text-xs text-muted-foreground flex-wrap">
                       <div className="flex flex-col gap-0.5">
-                        <span className="font-semibold text-foreground">{req.amount_sol} SOL</span>
+                        <span className="font-semibold text-foreground">{formatSol(req.amount_sol)} SOL</span>
                         {req.amount_eur && <span className="text-[10px]">≈ {req.amount_eur} €</span>}
                       </div>
                       <span className="font-mono">

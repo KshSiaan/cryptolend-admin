@@ -48,3 +48,21 @@ export async function howl<T>(
 
 
 export type idk = any;
+
+export function formatSol(amount: number | string | undefined | null): string {
+  if (amount == null || isNaN(Number(amount))) return "0";
+  const numAmount = typeof amount === "string" ? parseFloat(amount) : amount;
+  return new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 3,
+  }).format(numAmount);
+}
+
+export function formatSolFee(amount: number | string | undefined | null): string {
+  if (amount == null || isNaN(Number(amount))) return "0";
+  const numAmount = Number(amount);
+  if (numAmount > 0 && numAmount < 0.001) {
+    return "< 0.001";
+  }
+  return formatSol(numAmount);
+}

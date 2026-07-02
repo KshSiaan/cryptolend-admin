@@ -10,7 +10,7 @@ import { ArrowLeft, CheckCircle2, XCircle } from "lucide-react";
 
 import { useAdminUser, useAdminUserInvestments } from "@/hooks/use-admin-user";
 import { useAdminTransactions } from "@/hooks/use-admin-transactions";
-import { howl } from "@/lib/utils";
+import { howl, formatSol } from "@/lib/utils";
 import type { AdminUser } from "@/types/auth";
 import type { ApiResponse } from "@/types/base";
 
@@ -218,14 +218,14 @@ export default function UserProfilePage() {
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Available</span>
                 <span className="font-medium text-right">
-                  {user.wallet.balance_sol} SOL<br/>
+                  {formatSol(user.wallet.balance_sol)} SOL<br/>
                   {user.wallet.balance_eur && <span className="text-xs text-muted-foreground">≈ {user.wallet.balance_eur} €</span>}
                 </span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Frozen</span>
                 <span className="font-medium text-right">
-                  {user.wallet.frozen_balance_sol} SOL<br/>
+                  {formatSol(user.wallet.frozen_balance_sol)} SOL<br/>
                   {user.wallet.frozen_balance_eur && <span className="text-xs text-muted-foreground">≈ {user.wallet.frozen_balance_eur} €</span>}
                 </span>
               </div>
@@ -390,13 +390,13 @@ export default function UserProfilePage() {
                         <div>
                           <p className="font-semibold">{inv.loan?.title ?? `Loan #${inv.loan_id}`}</p>
                           <p className="text-sm text-muted-foreground mt-1 font-mono">
-                            {inv.amount_sol} SOL <span className="text-xs">(≈ {inv.amount_eur} €)</span>
+                            {formatSol(inv.amount_sol)} SOL <span className="text-xs">(≈ {inv.amount_eur} €)</span>
                           </p>
                         </div>
                         <div className="text-left sm:text-right">
                           <Badge variant="outline" className="capitalize mb-1">{inv.status}</Badge>
                           <p className="text-sm font-medium text-green-pos">
-                            +{inv.excepted_return_sol} SOL Expected
+                            +{formatSol(inv.excepted_return_sol)} SOL Expected
                             {inv.excepted_return_eur && (
                               <span className="text-xs text-muted-foreground font-normal ml-1">(≈ {inv.excepted_return_eur} €)</span>
                             )}
@@ -465,7 +465,7 @@ export default function UserProfilePage() {
                             )}
                           </div>
                           <p className="text-sm text-muted-foreground mt-1 font-mono">
-                            {tx.direction === "credit" ? "+" : "-"}{tx.amount_sol} SOL
+                            {tx.direction === "credit" ? "+" : "-"}{formatSol(tx.amount_sol)} SOL
                           </p>
                         </div>
                         <div className="text-left sm:text-right">

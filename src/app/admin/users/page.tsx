@@ -38,7 +38,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { useAdminUsers } from "@/hooks/use-admin-users";
-import { howl } from "@/lib/utils";
+import { howl, formatSol } from "@/lib/utils";
 import type { AdminUser } from "@/types/auth";
 import type { ApiResponse } from "@/types/base";
 
@@ -109,10 +109,10 @@ function UserDetailDialog({
             {[
               { label: "Role", value: user.role },
               { label: "Status", value: user.status },
-              { label: "Balance", value: `${user.wallet.balance_sol} SOL${user.wallet.balance_eur ? ` (≈ ${user.wallet.balance_eur} €)` : ""}` },
+              { label: "Balance", value: `${formatSol(user.wallet.balance_sol)} SOL${user.wallet.balance_eur ? ` (≈ ${user.wallet.balance_eur} €)` : ""}` },
               {
                 label: "Frozen",
-                value: `${user.wallet.frozen_balance_sol} SOL${user.wallet.frozen_balance_eur ? ` (≈ ${user.wallet.frozen_balance_eur} €)` : ""}`,
+                value: `${formatSol(user.wallet.frozen_balance_sol)} SOL${user.wallet.frozen_balance_eur ? ` (≈ ${user.wallet.frozen_balance_eur} €)` : ""}`,
               },
               { label: "Joined", value: formatDate(user.created_at) },
             ].map((r) => (
@@ -293,11 +293,11 @@ function UsersContent() {
                   </div>
                   <div className="hidden sm:flex items-center gap-4 text-right shrink-0">
                     <div className="flex flex-col gap-0.5">
-                      <span className="text-xs font-semibold text-foreground">{user.wallet.balance_sol} SOL</span>
+                      <span className="text-xs font-semibold text-foreground">{formatSol(user.wallet.balance_sol)} SOL</span>
                       {user.wallet.balance_eur && <span className="text-[10px] text-muted-foreground">≈ {user.wallet.balance_eur} €</span>}
                     </div>
                     <div className="flex flex-col gap-0.5">
-                      <span className="text-xs font-medium text-muted-foreground">{user.wallet.frozen_balance_sol} frozen</span>
+                      <span className="text-xs font-medium text-muted-foreground">{formatSol(user.wallet.frozen_balance_sol)} frozen</span>
                       {user.wallet.frozen_balance_eur && <span className="text-[10px] text-muted-foreground">≈ {user.wallet.frozen_balance_eur} €</span>}
                     </div>
                   </div>

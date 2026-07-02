@@ -33,7 +33,7 @@ import {
   type DepositStatus,
   useAdminDeposits,
 } from "@/hooks/use-admin-deposits";
-import { howl } from "@/lib/utils";
+import { howl, formatSol } from "@/lib/utils";
 import type { AdminDeposit } from "@/types/auth";
 import type { ApiResponse } from "@/types/base";
 
@@ -68,7 +68,7 @@ function formatDate(iso: string | null) {
 }
 
 function lamportsToSol(lamports: number) {
-  return (lamports / 1_000_000_000).toFixed(4);
+  return formatSol(lamports / 1_000_000_000);
 }
 
 function truncate(str: string | null, n = 16) {

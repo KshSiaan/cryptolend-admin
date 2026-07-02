@@ -10,7 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useHomeStats } from "@/hooks/use-home-stats";
 import { useProfile } from "@/hooks/use-profile";
 import { useWalletStats } from "@/hooks/use-wallet-stats";
-import { cn } from "@/lib/utils";
+import { cn, formatSol } from "@/lib/utils";
 
 function getGreeting() {
   const h = new Date().getHours();
@@ -68,7 +68,7 @@ export default function HomePage() {
               Balance
             </p>
             <p className="text-sm font-bold">
-              {parseFloat(balanceSol).toFixed(2) || 0} SOL
+              {formatSol(balanceSol)} SOL
             </p>
           </div>
           <Avatar className="w-10 h-10">
@@ -85,7 +85,7 @@ export default function HomePage() {
             Available Balance
           </p>
           <p className="text-4xl font-bold mt-1">
-            {parseFloat(balanceSol).toFixed(6) || 0}{" "}
+            {formatSol(balanceSol)}{" "}
             <span className="text-xl font-semibold">SOL</span>
           </p>
           <p className="text-xl font-bold mt-1 text-muted-foreground">
@@ -128,7 +128,7 @@ export default function HomePage() {
             Invested
           </p>
           <p className="text-2xl font-bold mt-1">
-            {parseFloat(stats?.total_invested_sol || "0").toFixed(2) || 0} SOL
+            {formatSol(stats?.total_invested_sol)} SOL
           </p>
           <p className="text-xs text-muted-foreground ">SOL</p>
           <p className="text-sm font-semibold mt-1 text-muted-foreground">
@@ -140,7 +140,7 @@ export default function HomePage() {
             Earnings
           </p>
           <p className="text-2xl font-bold mt-1 text-green-pos">
-            {parseFloat(stats?.total_earnings_sol || "0").toFixed(2) || 0} SOL
+            {formatSol(stats?.total_earnings_sol)} SOL
           </p>
           <p className="text-xs text-muted-foreground">SOL</p>
           <p className="text-sm font-semibold mt-1 text-muted-foreground">
@@ -169,7 +169,7 @@ export default function HomePage() {
                 </div>
                 <div className="text-right">
                   <p className="text-sm font-semibold text-green-pos">
-                    {inv.amount_sol} SOL | {inv.amount_eur}€
+                    {formatSol(inv.amount_sol)} SOL | {inv.amount_eur}€
                   </p>
                   <span className="inline-block mt-0.5 rounded-full bg-green-pos/10 text-green-pos text-[10px] px-2 py-0.5 font-medium capitalize">
                     {inv.status}
@@ -215,7 +215,7 @@ export default function HomePage() {
                   )}
                 >
                   {tx.direction === "credit" ? "+" : "-"}
-                  {tx.amount_sol} SOL | {tx.amount_eur}€
+                  {formatSol(tx.amount_sol)} SOL | {tx.amount_eur}€
                 </p>
               </div>
             ))}

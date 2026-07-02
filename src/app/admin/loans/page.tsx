@@ -43,7 +43,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { type AdminLoanStatus, useAdminLoans } from "@/hooks/use-admin-loans";
-import { howl } from "@/lib/utils";
+import { howl, formatSol } from "@/lib/utils";
 import type { AdminLoan } from "@/types/auth";
 import type { ApiResponse } from "@/types/base";
 
@@ -589,7 +589,7 @@ function DeleteDialog({
 }
 
 function lamportsToSol(lamports: number) {
-  return (lamports / 1_000_000_000).toFixed(2);
+  return formatSol(lamports / 1_000_000_000);
 }
 
 function fundedPercent(loan: AdminLoan) {
@@ -704,15 +704,15 @@ export default function LoansPage() {
                       <div className="flex flex-col gap-1.5 mt-2">
                         <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
                           <span className="bg-muted/50 border px-1.5 py-0.5 rounded-md">
-                            <span className="font-medium text-foreground">Total:</span> {loan.total_funded_amount_sol} / {loan.target_amount_sol} SOL
+                            <span className="font-medium text-foreground">Total:</span> {formatSol(loan.total_funded_amount_sol)} / {formatSol(loan.target_amount_sol)} SOL
                             {loan.target_amount_eur && <span className="opacity-75"> ({loan.total_funded_amount_eur} / {loan.target_amount_eur} €)</span>}
                           </span>
                           <span className="bg-muted/50 border px-1.5 py-0.5 rounded-md">
-                            <span className="font-medium text-foreground">Initial:</span> {loan.initial_funded_amount_sol} SOL
+                            <span className="font-medium text-foreground">Initial:</span> {formatSol(loan.initial_funded_amount_sol)} SOL
                             {loan.initial_funded_amount_eur && <span className="opacity-75"> ({loan.initial_funded_amount_eur} €)</span>}
                           </span>
                           <span className="bg-muted/50 border px-1.5 py-0.5 rounded-md">
-                            <span className="font-medium text-foreground">User:</span> {loan.investor_funded_amount_sol} SOL
+                            <span className="font-medium text-foreground">User:</span> {formatSol(loan.investor_funded_amount_sol)} SOL
                             {loan.investor_funded_amount_eur && <span className="opacity-75"> ({loan.investor_funded_amount_eur} €)</span>}
                           </span>
                         </div>

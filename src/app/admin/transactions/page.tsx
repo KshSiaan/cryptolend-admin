@@ -12,7 +12,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { useAdminTransactions } from "@/hooks/use-admin-transactions";
-import { cn } from "@/lib/utils";
+import { cn, formatSol } from "@/lib/utils";
 
 const statusBadge: Record<string, string> = {
   confirmed: "bg-green-100 text-green-700",
@@ -88,7 +88,7 @@ export default function TransactionsPage() {
                     >
                       <span className="text-sm font-semibold">
                         {tx.direction === "credit" ? "+" : "−"}
-                        {tx.amount_sol} SOL
+                        {formatSol(tx.amount_sol)} SOL
                       </span>
                       {tx.amount_eur && (
                         <span className="text-[10px] opacity-80">
