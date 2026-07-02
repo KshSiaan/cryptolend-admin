@@ -235,10 +235,7 @@ export function InvestSheet({
                 />
               </div>
               <p className="text-xs text-muted-foreground">
-                {loan.raised_amount_sol} of {loan.target_amount_sol} SOL raised
-              </p>
-              <p className="text-xs text-muted-foreground text-end">
-                {loan.raised_amount_eur} of {loan.target_amount_eur} € raised
+                {loan.raised_amount_sol} of {loan.target_amount_sol} SOL raised ({loan.raised_amount_eur} of {loan.target_amount_eur} €)
               </p>
             </div>
 
