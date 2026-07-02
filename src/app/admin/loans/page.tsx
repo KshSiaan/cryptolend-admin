@@ -593,12 +593,13 @@ function lamportsToSol(lamports: number) {
 }
 
 function fundedPercent(loan: AdminLoan) {
-  if (!loan.target_amount_lamports) return 0;
-  const totalFunded =
-    loan.initial_funded_amount_lamports + loan.funded_amount_lamports;
+  if (!loan.target_amount_eur) return 0;
+  const target = parseFloat(loan.target_amount_eur);
+  if (!target || target === 0) return 0;
+  const totalFunded = parseFloat(loan.total_funded_amount_eur || "0");
   return Math.min(
     100,
-    Math.round((totalFunded / loan.target_amount_lamports) * 100),
+    Math.round((totalFunded / target) * 100),
   );
 }
 

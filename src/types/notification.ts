@@ -2,7 +2,7 @@ export interface NotificationData {
   type: string;
   deposit_id?: number;
   status?: string;
-  amount_lamports?: number;
+
   amount_sol?: number;
   loan_id?: number;
   loan_number?: string;

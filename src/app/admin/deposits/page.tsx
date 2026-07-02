@@ -81,7 +81,7 @@ type ReviewAction =
   | { action: "confirm_chain_amount" }
   | {
       action: "confirm_custom_amount";
-      custom_amount_sol: number;
+      custom_amount_eur: number;
       reason: string;
     };
 
@@ -127,7 +127,7 @@ function ReviewDialog({
       }
       body = {
         action: "confirm_custom_amount",
-        custom_amount_sol: amt,
+        custom_amount_eur: amt,
         reason,
       };
     }
@@ -173,7 +173,7 @@ function ReviewDialog({
               },
               {
                 label: "Amount",
-                value: `${lamportsToSol(deposit.amount_lamports)} SOL${deposit.amount_eur ? ` (≈ ${deposit.amount_eur} €)` : ""}`,
+                value: deposit.amount_eur ? `${deposit.amount_eur} €` : "0.00 €",
               },
               {
                 label: "Intended",
@@ -240,7 +240,7 @@ function ReviewDialog({
             <div className="space-y-1">
               {/** biome-ignore lint/a11y/noLabelWithoutControl: <explanation> */}
               <label className="text-xs font-semibold uppercase tracking-wider">
-                Custom amount (SOL)
+                Custom amount (EUR)
               </label>
               <input
                 type="number"
@@ -358,7 +358,7 @@ export default function DepositsPage() {
                     </div>
                     <div className="flex items-center gap-4 text-xs text-muted-foreground flex-wrap">
                       <div className="flex flex-col gap-0.5">
-                        <span className="font-semibold text-foreground">{lamportsToSol(dep.amount_lamports)} SOL</span>
+                        <span className="font-semibold text-foreground">{formatSol(dep.amount_sol)} SOL</span>
                         {dep.amount_eur && <span className="text-[10px]">≈ {dep.amount_eur} €</span>}
                       </div>
                       <div className="flex items-center gap-3">
@@ -477,3 +477,5 @@ export default function DepositsPage() {
     </div>
   );
 }
+
+

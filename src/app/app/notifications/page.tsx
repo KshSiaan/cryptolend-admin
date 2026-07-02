@@ -33,7 +33,7 @@ function notificationMeta(n: Notification): {
   variant: "default" | "destructive";
 } {
   const d = n.data;
-  const amount = d.amount_sol == null ? "Your" : `${d.amount_sol} SOL`;
+  const amount = d.amount_eur == null ? "Your" : `${d.amount_eur} EUR`;
   const loanLabel =
     d.loan_title || d.loan_number
       ? `${d.loan_title ?? "Loan"}${d.loan_number ? ` (${d.loan_number})` : ""}`
@@ -44,7 +44,7 @@ function notificationMeta(n: Notification): {
     if (status === "confirmed") {
       return {
         title: "Deposit Confirmed",
-        description: `${d.amount_sol} SOL deposited successfully.`,
+        description: `${d.amount_eur} EUR deposited successfully.`,
         icon: <CheckCircle2 className="h-4 w-4 text-green-500" />,
         variant: "default",
       };
@@ -62,14 +62,14 @@ function notificationMeta(n: Notification): {
     if (status === "pending") {
       return {
         title: "Deposit Pending",
-        description: `${d.amount_sol} SOL deposit is being processed.`,
+        description: `${d.amount_eur} EUR deposit is being processed.`,
         icon: <Clock className="h-4 w-4 text-orange-400" />,
         variant: "default",
       };
     }
     return {
       title: "Deposit Update",
-      description: `Status: ${status}. Amount: ${d.amount_sol} SOL.`,
+      description: `Status: ${status}. Amount: ${d.amount_eur} EUR.`,
       icon: <Info className="h-4 w-4" />,
       variant: "default",
     };
@@ -128,8 +128,8 @@ function notificationMeta(n: Notification): {
     return {
       title: isApproved ? "Withdrawal Approved" : "Withdrawal Submitted",
       description: isApproved
-        ? `${d.amount_sol} SOL withdrawal request has been approved and is being processed.`
-        : `${d.amount_sol} SOL withdrawal request has been submitted and is pending admin review.`,
+        ? `${d.amount_eur} EUR withdrawal request has been approved and is being processed.`
+        : `${d.amount_eur} EUR withdrawal request has been submitted and is pending admin review.`,
       icon: isApproved ? <CheckCircle2 className="h-4 w-4 text-green-500" /> : <Clock className="h-4 w-4 text-orange-400" />,
       variant: "default",
     };
@@ -140,7 +140,7 @@ function notificationMeta(n: Notification): {
     return {
       title: isConfirmed ? "Withdrawal Confirmed" : "Withdrawal Failed",
       description: isConfirmed
-        ? `${d.amount_sol} SOL withdrawal has been confirmed on-chain.`
+        ? `${d.amount_eur} EUR withdrawal has been confirmed on-chain.`
         : d.failure_reason ? `Withdrawal failed: ${d.failure_reason}` : "Your withdrawal could not be completed.",
       icon: isConfirmed ? <CheckCircle2 className="h-4 w-4 text-green-500" /> : <XCircle className="h-4 w-4 text-destructive" />,
       variant: isConfirmed ? "default" : "destructive",
@@ -148,10 +148,10 @@ function notificationMeta(n: Notification): {
   }
 
   if (d.type === "admin_wallet_update") {
-    const adj = Number(d.adjustment_amount_sol) > 0 ? `+${d.adjustment_amount_sol}` : d.adjustment_amount_sol;
+    const adj = Number(d.adjustment_amount_eur) > 0 ? `+${d.adjustment_amount_eur}` : d.adjustment_amount_eur;
     return {
       title: "Account Balance Adjustment",
-      description: `Adjustment: ${adj} SOL. New balance: ${d.new_balance_sol} SOL. Reason: ${d.reason}`,
+      description: `Adjustment: ${adj} EUR. New balance: ${d.new_balance_eur} EUR. Reason: ${d.reason}`,
       icon: <Info className="h-4 w-4 text-blue-500" />,
       variant: "default",
     };
@@ -160,7 +160,7 @@ function notificationMeta(n: Notification): {
   const raw = n.type.split("\\").pop() ?? n.type;
   
   const details = [];
-  if (d.amount_sol) details.push(`${d.amount_sol} SOL`);
+  if (d.amount_eur) details.push(`${d.amount_eur} EUR`);
   if (d.status) details.push(`Status: ${d.status}`);
   if (loanLabel !== "this loan") details.push(`Loan: ${loanLabel}`);
   
@@ -317,3 +317,4 @@ export default function NotificationsPage() {
     </div>
   );
 }
+

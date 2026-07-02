@@ -397,7 +397,7 @@ export default function UserProfilePage() {
                           <Badge variant="outline" className="capitalize mb-1">{inv.status}</Badge>
                           <p className="text-sm font-medium text-green-pos">
                             +{formatSol(inv.excepted_return_sol)} SOL Expected
-                            {inv.excepted_return_eur && (
+                            {inv.excepted_return_eur !== undefined && inv.excepted_return_eur !== null && (
                               <span className="text-xs text-muted-foreground font-normal ml-1">(≈ {inv.excepted_return_eur} €)</span>
                             )}
                           </p>
@@ -465,7 +465,7 @@ export default function UserProfilePage() {
                             )}
                           </div>
                           <p className="text-sm text-muted-foreground mt-1 font-mono">
-                            {tx.direction === "credit" ? "+" : "-"}{formatSol(tx.amount_sol)} SOL
+                            {tx.direction === "credit" ? "+" : "-"}{formatSol(tx.amount_sol)} SOL <span className="text-xs">(≈ {tx.amount_eur} €)</span>
                           </p>
                         </div>
                         <div className="text-left sm:text-right">

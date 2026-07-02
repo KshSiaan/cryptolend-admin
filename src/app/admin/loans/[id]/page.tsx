@@ -303,7 +303,7 @@ export default function AdminLoanBreakdownPage() {
                       </div>
                       <div className="col-span-3 text-right font-medium text-primary flex flex-col items-end">
                         <div>
-                          {formatLamports(inv.amount_lamports)} <span className="text-[10px] uppercase">SOL</span>
+                          {formatSol(inv.amount_sol)} <span className="text-[10px] uppercase">SOL</span>
                         </div>
                         {inv.amount_eur && (
                           <div className="text-[10px] sm:text-xs font-normal text-muted-foreground opacity-75 mt-0.5 truncate" title={`${inv.amount_eur} €`}>
@@ -313,7 +313,7 @@ export default function AdminLoanBreakdownPage() {
                       </div>
                       <div className="col-span-3 text-right font-medium text-green-600 hidden sm:flex flex-col items-end">
                         <div>
-                          {formatLamports(inv.excepted_return)} <span className="text-[10px] uppercase">SOL</span>
+                          +{formatSol(inv.excepted_return_sol)} <span className="text-[10px] uppercase">SOL</span>
                         </div>
                         {inv.excepted_return_eur && (
                           <div className="text-[10px] sm:text-xs font-normal text-muted-foreground opacity-75 mt-0.5 truncate" title={`${inv.excepted_return_eur} €`}>

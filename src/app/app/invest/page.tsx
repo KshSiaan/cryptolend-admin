@@ -52,6 +52,9 @@ export default function InvestPage() {
             <p className="text-sm font-bold">
               {formatSol(profile?.wallet_balance_sol)} SOL
             </p>
+            <p className="text-sm font-bold">
+              {profile?.wallet_balance_eur ?? "0"} €
+            </p>
           </div>
           <Avatar className="w-10 h-10">
             <AvatarImage src={profile?.profile_photo_url ?? ""} />

@@ -319,13 +319,6 @@ export function DepositSheet({ children }: { children: React.ReactNode }) {
                         },
                       ]
                     : []),
-                  {
-                    label: "Amount",
-                    value:
-                      depositResult.deposit.amount_sol === "0"
-                        ? "Processing..."
-                        : `${depositResult.deposit.amount_sol} SOL`,
-                  },
                   { label: "Network", value: "Solana" },
                   {
                     label: "Tx Signature",

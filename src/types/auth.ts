@@ -68,7 +68,7 @@ export interface ProfileData {
   created_at: string;
   member_since: string;
   status: string;
-  wallet_balance_lamports: number;
+
   wallet_balance_sol: string;
   wallet_balance_eur: string;
 }
@@ -104,7 +104,7 @@ export interface DepositBody {
 export interface DepositRecord {
   id: number;
   user_id: number;
-  amount_lamports: number;
+
   amount_sol: string;
   input_amount?: string | null;
   input_currency?: string | null;
@@ -142,7 +142,7 @@ export interface ConversionResult {
   to: string;
   input_amount: string;
   output_amount_sol: string;
-  output_amount_lamports: number;
+
 }
 
 export interface MarketConvertData {
@@ -178,7 +178,7 @@ export interface WalletTransaction {
 export interface WithdrawalRequest {
   id: number;
   status: string;
-  amount_lamports: number;
+
   amount_sol: string;
   amount_eur: string;
 
@@ -229,9 +229,9 @@ export interface LoanItem {
   raised_amount_eur: string;
   funded_percent: number;
   funded_percent_label: string;
-  target_amount_lamports?: number;
-  raised_amount_lamports?: number;
-  remaining_amount_lamports?: number;
+
+
+
   remaining_amount_sol?: string;
   is_fully_funded?: boolean;
   created_at?: string;
@@ -241,10 +241,10 @@ export interface LoanItem {
 export interface InvestmentResult {
   id: number;
   loan_id: number;
-  amount_lamports: number;
+
   amount_sol: string;
   apr_percent: number;
-  expected_return_lamports: number;
+
   expected_return_sol: string;
   status: string;
   created_at: string;
@@ -255,10 +255,10 @@ export interface InvestResponseData {
   loan: LoanItem;
   conversion: null | unknown;
   wallet: {
-    balance_lamports: number;
+
     balance_sol: string;
     balance_eur: string;
-    frozen_balance_lamports: number;
+
     frozen_balance_sol: string;
     frozen_balance_eur: string;
   };
@@ -380,7 +380,7 @@ export interface AdminDashboardStats {
 export interface AdminWithdrawalRequest {
   id: number;
   status: string;
-  amount_lamports: number;
+
   amount_sol: string;
   amount_eur?: string;
   recipient_address: string;
@@ -402,7 +402,7 @@ export interface AdminWithdrawalRequest {
 export interface AdminDeposit {
   id: number;
   user_id: number;
-  amount_lamports: number;
+
   input_amount?: string | null;
   input_currency?: string | null;
   amount_eur?: string | null;
@@ -467,7 +467,7 @@ export interface AdminUser {
 export interface AdminUserInvestment {
   id: number;
   loan_id: number;
-  amount_lamports: number;
+
   amount_sol: string;
   amount_eur: string;
   apr_percent: string;
@@ -490,9 +490,9 @@ export interface AdminLoan {
   description: string;
   sector: string;
   apr_percent: string;
-  target_amount_lamports: number;
-  funded_amount_lamports: number;
-  initial_funded_amount_lamports: number;
+
+
+
   duraction_months: number;
   funding_starts_at?: string | null;
   funding_ends_at?: string | null;

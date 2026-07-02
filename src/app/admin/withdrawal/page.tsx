@@ -225,7 +225,7 @@ function ReviewDialog({
                 <Button
                   className="w-full gap-1.5 bg-[oklch(0.52_0.165_145)] hover:bg-[oklch(0.47_0.165_145)] text-white"
                   onClick={handleApprove}
-                  disabled={pending}
+                  disabled
                 >
                   <Check className="size-3.5 shrink-0" />
                   {pending ? "…" : "Approve (Automatic Pay)"}

@@ -70,6 +70,9 @@ export default function HomePage() {
             <p className="text-sm font-bold">
               {formatSol(balanceSol)} SOL
             </p>
+            <p className="text-sm font-bold">
+              {balanceEur} €
+            </p>
           </div>
           <Avatar className="w-10 h-10">
             <AvatarImage src={profile?.profile_photo_url ?? ""} />

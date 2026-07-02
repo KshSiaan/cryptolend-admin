@@ -33,7 +33,7 @@ export function InvestSheet({
 }) {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<Step>("invest");
-  const [currency, setCurrency] = useState<Currency>("SOL");
+  const [currency, setCurrency] = useState<Currency>("EUR");
   const [solAmount, setSolAmount] = useState("");
   const [eurAmount, setEurAmount] = useState("");
   const [eurToSol, setEurToSol] = useState<string | null>(null);
